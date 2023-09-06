@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 
-from backend.recipes.validator import validator_more_one
+from .validator import validator_more_one
 
 UsernameValidator = UnicodeUsernameValidator()
 
@@ -64,13 +64,14 @@ class Subscriptions(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Подписчик',
         related_name='follower',
-        constraints=[models.UniqueConstraint(fields=['author', 'subscriber'],
-                                             name='author_subscriber')]
+
     )
 
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
+        constraints = [models.UniqueConstraint(fields=['author', 'subscriber'],
+                                               name='author_subscriber')]
 
     def __str__(self):
         return f'{self.author}-{self.subscriber}'
@@ -154,7 +155,8 @@ class Recipes(models.Model):
         )
     text = models.CharField(
         verbose_name='Текст рецепта',
-        blank=False
+        blank=False,
+        max_length=1000
     )
     cooking_time = models.IntegerField(
         verbose_name='Время приготовления',
