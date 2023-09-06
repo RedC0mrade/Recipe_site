@@ -3,9 +3,10 @@ from rest_framework.routers import SimpleRouter
 
 from . import views
 
+app_name = 'api'
 router = SimpleRouter()
 
-router.register('users', views.UserViewSet, basename='users')
+router.register('users', views.MyUserViewSet, basename='users')
 
 urlpatterns = [
     path('', include(router.urls)),

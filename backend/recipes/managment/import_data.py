@@ -2,10 +2,9 @@ import csv
 
 from django.core.management.base import BaseCommand
 
-from backend.recipes.models import Ingredient
+from recipes.models import Ingredient
 
 CSV_PATH = 'data/'
-FOREIGN_KEY_FIELDS = ('category', 'author')
 DICT = {Ingredient: 'ingredients.csv'}
 
 
