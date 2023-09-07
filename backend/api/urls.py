@@ -6,7 +6,7 @@ from . import views
 app_name = 'api'
 router = SimpleRouter()
 
-router.register('users', views.MyUserViewSet, basename='users')
+router.register('users', views.DjoserUserViewSet, basename='users')
 
 urlpatterns = [
     path('', include(router.urls)),

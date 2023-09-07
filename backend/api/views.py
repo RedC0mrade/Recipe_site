@@ -4,15 +4,16 @@ from djoser.views import UserViewSet
 from rest_framework import viewsets
 
 from .pagination import UserPagination
-from .serializers import UserSerializer
-
+from .permission import AuthenticatedOrReadOnly
+from .serializers import DjoserUserSerializer
 
 User = get_user_model()
 
 
-class MyUserViewSet(UserViewSet):
+class DjoserUserViewSet(UserViewSet):
     """Представление пользователей."""
-
+    
     queryset = User.objects.all()
-    serializer_class = UserSerializer
+    serializer_class = DjoserUserSerializer
     pagination_class = UserPagination
+    permission_classes = (AuthenticatedOrReadOnly,)
