@@ -82,7 +82,7 @@ class Subscriptions(models.Model):
 class Tags(models.Model):
     """Модель тэга."""
     name = models.CharField(
-        verbose_name='Тэги',
+        verbose_name='Имя',
         blank=False,
         unique=True,
         null=False,

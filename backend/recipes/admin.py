@@ -72,9 +72,9 @@ class SubscriptionsAdmin(admin.ModelAdmin):
 
 @admin.register(Tags)
 class TagsAdmin(admin.ModelAdmin):
-    list_display = ('name', 'color', 'slug')
-    search_fields = ('name', 'color', 'slug')
-    list_filter = ('name', 'color', 'slug')
+    list_display = ('id', 'name', 'color', 'slug')
+    search_fields = ('id', 'name', 'color', 'slug')
+    list_filter = ('id', 'name', 'color', 'slug')
     empty_value_display = '=пусто='
 
 
