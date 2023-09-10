@@ -6,8 +6,9 @@ from rest_framework.viewsets import ModelViewSet
 
 from .pagination import UserPagination
 from .permission import AuthenticatedOrReadOnly, ReadOnly
-from .serializers import DjoserUserSerializer, TagsSerializer, RecipesSerializer
-from recipes.models import Tags, User, Recipes
+from .serializers import DjoserUserSerializer, TagsSerializer, \
+    RecipesSerializer, IngredientsSerializer
+from recipes.models import Tags, User, Recipes, Ingredient
 
 
 class DjoserUserViewSet(UserViewSet):
@@ -32,3 +33,10 @@ class RecipesViewsSet(ModelViewSet):
 
     queryset = Recipes.objects.all()
     serializer_class = RecipesSerializer
+
+
+class IngredientsViewsSet(ModelViewSet):
+    """Представление игридиентов."""
+
+    queryset = Ingredient.objects.all()
+    serializer_class = IngredientsSerializer

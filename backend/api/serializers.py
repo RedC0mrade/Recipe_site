@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer
 
-from recipes.models import Tags, User, Subscriptions, Recipes
+from recipes.models import Tags, User, Subscriptions, Recipes, Ingredient
 
 
 class DjoserUserSerializer(UserSerializer):
@@ -50,3 +50,11 @@ class RecipesSerializer(ModelSerializer):
     class Meta:
         models = Recipes
         fields = ('tags', 'image', 'name', 'text', 'cooking_time')
+
+
+class IngredientsSerializer(ModelSerializer):
+    """Сериализатор ингредиентов."""
+
+    class Meta:
+        models = Ingredient
+        fields = ('name', 'measurement_unit')

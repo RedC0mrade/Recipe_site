@@ -28,22 +28,29 @@ class IngredientAdmin(admin.ModelAdmin):
     empty_value_display = '=пусто='
 
 
-@admin.register(IngredientsOfRecipe)
-class IngredientsOfRecipeAdmin(admin.ModelAdmin):
-    list_display = ('recipe', 'ingredient', 'amount')
-    search_fields = ('recipe', 'ingredient', 'amount')
-    list_filter = ('recipe', 'ingredient', 'amount')
-    empty_value_display = '=пусто='
+# @admin.register(IngredientsOfRecipe)
+# class IngredientsOfRecipeAdmin(admin.ModelAdmin):
+#     list_display = ('recipe', 'ingredient', 'amount')
+#     search_fields = ('recipe', 'ingredient', 'amount')
+#     list_filter = ('recipe', 'ingredient', 'amount')
+#     empty_value_display = '=пусто='
+
+
+class RecipeIngredientAdmin(admin.StackedInline):
+    model = IngredientsOfRecipe
+    autocomplete_fields = ('ingredient',)
+    min_num = 1
 
 
 @admin.register(Recipes)
 class RecipesAdmin(admin.ModelAdmin):
-    list_display = ('author_name', 'name', 'text', 'cooking_time',
-                    'recipes_ingredients', 'recipes_tag', )
+    list_display = ('id', 'author_name', 'name', 'text', 'cooking_time',
+                    'recipes_ingredients', 'recipes_tag', 'favorite_count', 'image')
     list_filter = ('tag', 'author', 'name')
     search_fields = ('name', 'cooking_time', 'tags__name',
                      'author__email', 'ingredients__name')
     empty_value_display = '=пусто='
+    inlines = (RecipeIngredientAdmin,)
 
     @admin.display(description='автор')
     def author_name(self, obj):
@@ -51,11 +58,17 @@ class RecipesAdmin(admin.ModelAdmin):
 
     @admin.display(description='теги')
     def recipes_tag(self, obj):
-        return obj.recipe.tags.all()
+        result = []
+        for tag in obj.tag.all():
+            result.append(tag.name)
+        return ', '.join(result)
 
     @admin.display(description='ингридиенты')
     def recipes_ingredients(self, obj):
-        return obj.recipe.ingredients.all()
+        result = []
+        for ingredient in obj.ingredients.all():
+            result.append(ingredient.name[0].uppper() + ingredient.name[1:])
+        return ', '.join(result)
 
     @admin.display(description='отметок в избраном')
     def favorite_count(self, obj):
