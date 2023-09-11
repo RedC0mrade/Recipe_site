@@ -22,7 +22,7 @@ class FavoriteAdmin(admin.ModelAdmin):
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
-    list_display = ('name', 'measurement_unit')
+    list_display = ('id', 'name', 'measurement_unit')
     search_fields = ('name', 'measurement_unit')
     list_filter = ('name',)
     empty_value_display = '=пусто='
@@ -47,7 +47,7 @@ class RecipesAdmin(admin.ModelAdmin):
     list_display = ('id', 'author_name', 'name', 'text', 'cooking_time',
                     'recipes_ingredients', 'recipes_tag', 'favorite_count', 'image')
     list_filter = ('tag', 'author', 'name')
-    search_fields = ('name', 'cooking_time', 'tags__name',
+    search_fields = ('name', 'cooking_time', 'tag__name',
                      'author__email', 'ingredients__name')
     empty_value_display = '=пусто='
     inlines = (RecipeIngredientAdmin,)
@@ -67,7 +67,7 @@ class RecipesAdmin(admin.ModelAdmin):
     def recipes_ingredients(self, obj):
         result = []
         for ingredient in obj.ingredients.all():
-            result.append(ingredient.name[0].uppper() + ingredient.name[1:])
+            result.append(ingredient.name[0].upper() + ingredient.name[1:])
         return ', '.join(result)
 
     @admin.display(description='отметок в избраном')

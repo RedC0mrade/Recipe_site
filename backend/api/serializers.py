@@ -1,7 +1,6 @@
-from abc import ABC
-
 from djoser.serializers import UserSerializer, UserCreateSerializer
-from rest_framework import serializers
+from drf_extra_fields.fields import Base64ImageField
+from django.db.models import F
 from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer
 
@@ -46,15 +45,40 @@ class TagsSerializer(ModelSerializer):
 
 class RecipesSerializer(ModelSerializer):
     """Сериализатор рецептов."""
+    is_favorited = SerializerMethodField(read_only=True)
+    is_in_shopping_cart = SerializerMethodField(read_only=True)
+    author = DjoserUserSerializer(read_only=True)
+    tag = TagsSerializer(read_only=True, many=True)
+    ingredients = SerializerMethodField()
+    image = Base64ImageField()
 
     class Meta:
-        models = Recipes
-        fields = ('tags', 'image', 'name', 'text', 'cooking_time')
+        model = Recipes
+        fields = ('id', 'tag', 'author', 'ingredients',
+                  'is_favorited', 'is_in_shopping_cart', 'name',
+                  'image', 'text', 'cooking_time')
+
+    def get_is_favorited(self, obj):
+        """олучаем число рецептов добавленых в избранное."""
+        user = self.context.get('request').user
+        if user.is_anonymous:
+            return False
+        return user.favorites.filter(recipe=obj).exists()
+
+    def get_is_in_shopping_cart(self, obj):
+        user = self.context.get('request').user
+        if user.is_anonymous:
+            return False
+        return user.cart.filter(recipe=obj).exists()
+
+    def get_ingredients(self, obj):
+        return obj.ingredients.values('id', 'name', 'measurement_unit',
+                                      amount=F('ingredients_in_recipe__amount'))
 
 
 class IngredientsSerializer(ModelSerializer):
     """Сериализатор ингредиентов."""
 
     class Meta:
-        models = Ingredient
+        model = Ingredient
         fields = ('name', 'measurement_unit')
