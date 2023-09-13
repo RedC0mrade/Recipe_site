@@ -3,11 +3,14 @@ from django.shortcuts import render
 from djoser.views import UserViewSet
 from rest_framework import viewsets
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from .pagination import UserPagination
 from .permission import AuthenticatedOrReadOnly, ReadOnly
-from .serializers import DjoserUserSerializer, TagsSerializer, \
-    RecipesSerializer, IngredientsSerializer
+from .serializers import (DjoserUserSerializer, TagsSerializer,
+                          RecipesSerializer, IngredientsSerializer,
+                          PostRecipesSerializer, )
 from recipes.models import Tags, User, Recipes, Ingredient
 
 
@@ -26,13 +29,18 @@ class TagsViewSet(ModelViewSet):
     queryset = Tags.objects.all()
     serializer_class = TagsSerializer
     permission_classes = (ReadOnly,)
+    pagination_class = None
 
 
 class RecipesViewsSet(ModelViewSet):
     """Представление рецептов."""
 
     queryset = Recipes.objects.all()
-    serializer_class = RecipesSerializer
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return PostRecipesSerializer
+        return RecipesSerializer
 
 
 class IngredientsViewsSet(ModelViewSet):

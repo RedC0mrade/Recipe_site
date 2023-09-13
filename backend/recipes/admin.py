@@ -45,9 +45,9 @@ class RecipeIngredientAdmin(admin.StackedInline):
 @admin.register(Recipes)
 class RecipesAdmin(admin.ModelAdmin):
     list_display = ('id', 'author_name', 'name', 'text', 'cooking_time',
-                    'recipes_ingredients', 'recipes_tag', 'favorite_count', 'image')
-    list_filter = ('tag', 'author', 'name')
-    search_fields = ('name', 'cooking_time', 'tag__name',
+                    'recipes_ingredients', 'recipes_tags', 'favorite_count', 'image')
+    list_filter = ('tags', 'author', 'name')
+    search_fields = ('name', 'cooking_time', 'tags__name',
                      'author__email', 'ingredients__name')
     empty_value_display = '=пусто='
     inlines = (RecipeIngredientAdmin,)
@@ -57,9 +57,9 @@ class RecipesAdmin(admin.ModelAdmin):
         return obj.author.username
 
     @admin.display(description='теги')
-    def recipes_tag(self, obj):
+    def recipes_tags(self, obj):
         result = []
-        for tag in obj.tag.all():
+        for tag in obj.tags.all():
             result.append(tag.name)
         return ', '.join(result)
 

@@ -13,4 +13,3 @@ def run():
             obj.measurement_unit = row[1]
             data.append(obj)
         Ingredient.objects.bulk_create(data)
-    print('finish')

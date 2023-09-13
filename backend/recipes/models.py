@@ -150,7 +150,7 @@ class Recipes(models.Model):
         null=False,
         max_length=200
     )
-    tag = models.ManyToManyField(
+    tags = models.ManyToManyField(
         Tags,
         verbose_name='Тэг',
         related_name='recipes',
