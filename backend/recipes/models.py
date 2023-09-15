@@ -203,9 +203,11 @@ class IngredientsOfRecipe(models.Model):
     class Meta:
         verbose_name = 'Ингредиент рецепта',
         verbose_name_plural = 'Ингредиенты рецепта',
-        ordering = ('recipe',)
         constraints = [models.UniqueConstraint(fields=['recipe', 'ingredient'],
                                                name='ingredient_recipe')]
+
+    def __str__(self):
+        return f'{self.ingredient.name} {self.amount}'
 
 
 class Favorite(models.Model):

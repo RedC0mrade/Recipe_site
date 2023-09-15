@@ -23,17 +23,17 @@ class FavoriteAdmin(admin.ModelAdmin):
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'measurement_unit')
-    search_fields = ('name', 'measurement_unit')
+    search_fields = ('id', 'name', 'measurement_unit')
     list_filter = ('name',)
     empty_value_display = '=пусто='
 
 
-# @admin.register(IngredientsOfRecipe)
-# class IngredientsOfRecipeAdmin(admin.ModelAdmin):
-#     list_display = ('recipe', 'ingredient', 'amount')
-#     search_fields = ('recipe', 'ingredient', 'amount')
-#     list_filter = ('recipe', 'ingredient', 'amount')
-#     empty_value_display = '=пусто='
+@admin.register(IngredientsOfRecipe)
+class IngredientsOfRecipeAdmin(admin.ModelAdmin):
+    list_display = ('recipe', 'ingredient', 'amount')
+    search_fields = ('recipe', 'ingredient', 'amount')
+    list_filter = ('recipe', 'ingredient', 'amount')
+    empty_value_display = '=пусто='
 
 
 class RecipeIngredientAdmin(admin.StackedInline):
@@ -45,7 +45,8 @@ class RecipeIngredientAdmin(admin.StackedInline):
 @admin.register(Recipes)
 class RecipesAdmin(admin.ModelAdmin):
     list_display = ('id', 'author_name', 'name', 'text', 'cooking_time',
-                    'recipes_ingredients', 'recipes_tags', 'favorite_count', 'image')
+                    'recipes_ingredients', 'recipes_tags', 'favorite_count',
+                    'image')
     list_filter = ('tags', 'author', 'name')
     search_fields = ('name', 'cooking_time', 'tags__name',
                      'author__email', 'ingredients__name')

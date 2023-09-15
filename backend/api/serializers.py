@@ -2,10 +2,11 @@ from djoser.serializers import UserSerializer, UserCreateSerializer
 from drf_extra_fields.fields import Base64ImageField
 from django.db.models import F
 from rest_framework import serializers
-from rest_framework.fields import SerializerMethodField
+from rest_framework.fields import SerializerMethodField, IntegerField
 from rest_framework.serializers import ModelSerializer
 
-from recipes.models import Tags, User, Subscriptions, Recipes, Ingredient
+from recipes.models import (Tags, User, Subscriptions,
+                            Recipes, Ingredient, IngredientsOfRecipe)
 
 
 class DjoserUserSerializer(UserSerializer):
@@ -51,7 +52,6 @@ class RecipesSerializer(ModelSerializer):
     author = DjoserUserSerializer(read_only=True)
     tags = TagsSerializer(read_only=True, many=True)
     ingredients = SerializerMethodField()
-    image = Base64ImageField()
 
     class Meta:
         model = Recipes
@@ -79,23 +79,69 @@ class RecipesSerializer(ModelSerializer):
                                       amount=F('ingredients_in_recipe__amount'))
 
 
-class PostRecipesSerializer(ModelSerializer):
-    """Сериализатор рецптов запроса POST."""
-    tags = serializers.PrimaryKeyRelatedField(
-        queryset=Tags.objects.all(),
-        many=True
-    )
-    image = Base64ImageField()
-
-    class Meta:
-        model = Recipes
-        fields = ('ingredients', 'tags', 'image',
-                  'name', 'text', 'cooking_time')
-
-
 class IngredientsSerializer(ModelSerializer):
     """Сериализатор ингредиентов."""
 
     class Meta:
         model = Ingredient
-        fields = ('name', 'measurement_unit')
+        fields = ('id', 'name', 'measurement_unit')
+
+
+class IngredientsOfRecipeSerializer(ModelSerializer):
+    """Сериализатор для передачи количества игредиентов в рецепты."""
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['ingredient'] = IngredientsSerializer(instance.ingredient).data
+        return data
+
+    class Meta:
+        model = IngredientsOfRecipe
+        fields = ('ingredient', 'amount')
+
+
+class PostIngredientsOfRecipeSerializer(ModelSerializer):
+    """Сериализатор для передачи количества игредиентов в рецепты
+        при POST запросах."""
+    id = IntegerField(write_only=True)
+
+    class Meta:
+        model = IngredientsOfRecipe
+        fields = ('id', 'amount')
+
+
+class PostRecipesSerializer(ModelSerializer):
+    """Сериализатор рецптов запроса POST."""
+    tags = serializers.PrimaryKeyRelatedField(
+        queryset=Tags.objects.all(), many=True)
+    image = Base64ImageField()
+    author = DjoserUserSerializer(read_only=True)
+    ingredients = PostIngredientsOfRecipeSerializer(many=True)
+
+    class Meta:
+        model = Recipes
+        fields = ('id', 'author', 'ingredients', 'tags', 'image',
+                  'name', 'text', 'cooking_time')
+
+    def ingredients_With_amount(self, ingredients, recipe):
+        """Создание свяэанных пар ингредиенты-количество."""
+        recipe_ingredients = []
+        for ingredient_data in ingredients:
+            ingredient = Ingredient.objects.get(id=ingredient_data['id'])
+            amount = ingredient_data['amount']
+            recipe_ingredient = IngredientsOfRecipe(
+                ingredient=ingredient,
+                recipe=recipe,
+                amount=amount
+            )
+            recipe_ingredients.append(recipe_ingredient)
+        IngredientsOfRecipe.objects.bulk_create(recipe_ingredients)
+
+    def create(self, validated_data):
+        """Создание многострадального рецепта."""
+        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('ingredients')
+        recipe = Recipes.objects.create(**validated_data)
+        recipe.tags.set(tags)
+        self.ingredients_With_amount(ingredients, recipe)
+        return recipe

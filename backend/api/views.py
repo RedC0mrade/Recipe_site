@@ -42,6 +42,9 @@ class RecipesViewsSet(ModelViewSet):
             return PostRecipesSerializer
         return RecipesSerializer
 
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
 
 class IngredientsViewsSet(ModelViewSet):
     """Представление игридиентов."""
