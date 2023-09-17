@@ -123,8 +123,12 @@ class PostRecipesSerializer(ModelSerializer):
         fields = ('id', 'author', 'ingredients', 'tags', 'image',
                   'name', 'text', 'cooking_time')
 
-    def ingredients_With_amount(self, ingredients, recipe):
-        """Создание свяэанных пар ингредиенты-количество."""
+    def create(self, validated_data):
+        """Создание многострадального рецепта."""
+        ingredients = validated_data.pop('ingredients')
+        tags = validated_data.pop('tags')
+        recipe = Recipes.objects.create(**validated_data)
+        recipe.tags.set(tags)
         recipe_ingredients = []
         for ingredient_data in ingredients:
             ingredient = Ingredient.objects.get(id=ingredient_data['id'])
@@ -136,12 +140,40 @@ class PostRecipesSerializer(ModelSerializer):
             )
             recipe_ingredients.append(recipe_ingredient)
         IngredientsOfRecipe.objects.bulk_create(recipe_ingredients)
-
-    def create(self, validated_data):
-        """Создание многострадального рецепта."""
-        tags = validated_data.pop('tags')
-        ingredients = validated_data.pop('ingredients')
-        recipe = Recipes.objects.create(**validated_data)
-        recipe.tags.set(tags)
-        self.ingredients_With_amount(ingredients, recipe)
         return recipe
+
+    def update(self, instance, validated_data):
+        """Обновление пецепта"""
+        ingredients = validated_data.pop('ingredients')
+        tags = validated_data.pop('tags')
+        instance = super().update(instance, validated_data)
+        instance.ingredients.clear()
+        instance.tags.clear()
+        instance.tags.set(tags)
+        recipe_ingredients = []
+        for ingredient_data in ingredients:
+            ingredient = Ingredient.objects.get(id=ingredient_data['id'])
+            amount = ingredient_data['amount']
+            recipe_ingredient = IngredientsOfRecipe(
+                ingredient=ingredient,
+                recipe=instance,
+                amount=amount
+            )
+            recipe_ingredients.append(recipe_ingredient)
+        IngredientsOfRecipe.objects.bulk_create(recipe_ingredients)
+        instance.save()
+        return instance
+
+    def to_representation(self, instance):
+        """Возвращение созданного рецепта пользователю"""
+        request = self.context.get('request')
+        context = {'request': request}
+        return RecipesSerializer(instance,
+                                 context=context).data
+
+
+class RecipeCartSerializer(ModelSerializer):
+    """Сериализатор добавления рецепта в корзину"""
+    class Meta:
+        model = Recipes
+        fields = ('id', 'name', 'image', 'cooking_time')
