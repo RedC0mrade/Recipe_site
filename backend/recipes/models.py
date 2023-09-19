@@ -135,8 +135,8 @@ class Recipes(models.Model):
     """Рецепт."""
     author = models.ForeignKey(
         User,
-        verbose_name='Автор',
         on_delete=models.CASCADE,
+        verbose_name='Автор',
         related_name='recipes',
     )
     image = models.ImageField(
@@ -185,14 +185,13 @@ class IngredientsOfRecipe(models.Model):
     """Ингредиенты в рецепте."""
     recipe = models.ForeignKey(
         Recipes,
-        related_name='ingredients_in_recipe',
         on_delete=models.CASCADE,
+        related_name='ingredients_in_recipe',
     )
     ingredient = models.ForeignKey(
         Ingredient,
-        related_name='ingredients_in_recipe',
         on_delete=models.CASCADE,
-
+        related_name='ingredients_in_recipe',
     )
     amount = models.IntegerField(
         verbose_name='Количество ингредиентов',

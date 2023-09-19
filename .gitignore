@@ -108,8 +108,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-/media/
-/scripts/
+media/
+scripts/
 # Spyder project settings
 .spyderproject
 .spyproject
