@@ -31,6 +31,7 @@ class DjoserUserViewSet(UserViewSet):
             detail=False, )
     def subscriptions(self, request):
         """Все подписки пользователя."""
+
         page = self.paginate_queryset(Subscriptions.objects.filter(
             subscriber=request.user))
         serializer = SubscribeSerializer(page, many=True,
@@ -43,18 +44,25 @@ class DjoserUserViewSet(UserViewSet):
             detail=True)
     def subscribe(self, request, **kwargs):
         """Подписка."""
+
         subscriber = request.user
         author = get_object_or_404(User, id=self.kwargs.get('id'))
-        print(author)
         if subscriber == author:
             return Response({'Ошибка': 'Нельзя подписаться на себя'},
                             status=status.HTTP_400_BAD_REQUEST)
         if request.method == 'POST':
-            subscription, _ = Subscriptions.objects.get_or_create(
+            subscribe, _ = Subscriptions.objects.get_or_create(
                 subscriber=subscriber, author=author)
-            serializer = self.get_serializer(author,
+            serializer = SubscribeSerializer(subscribe,
                                              context={'request': request})
             return Response(serializer.data, status.HTTP_201_CREATED)
+        if request.method == 'DELETE':
+            if not Subscriptions.objects.filter(subscriber=subscriber,
+                                                author=author).exists():
+                return Response({'Ошибка': 'Нельзя отписаться не подписавшись'})
+            Subscriptions.objects.filter(subscriber=subscriber,
+                                         author=author).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class TagsViewSet(ModelViewSet):
@@ -168,3 +176,4 @@ class IngredientsViewsSet(ModelViewSet):
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientsSerializer
+    pagination_class = None

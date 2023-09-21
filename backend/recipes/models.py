@@ -76,7 +76,7 @@ class Subscriptions(models.Model):
                                                name='author_subscriber')]
 
     def __str__(self):
-        return f'{self.author}-{self.subscriber}'
+        return f'Author({self.author}) - Subscriber({self.subscriber})'
 
 
 class Tags(models.Model):

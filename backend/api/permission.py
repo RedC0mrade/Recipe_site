@@ -7,6 +7,8 @@ class AuthenticatedOrReadOnly(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
+        if request.user.is_anonymous and view.action == 'me':
+            return False
         return bool(
             request.method in permissions.SAFE_METHODS or
             request.user and
