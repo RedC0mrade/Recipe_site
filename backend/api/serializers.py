@@ -205,7 +205,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
         read_only_fields = ('author',)
 
     def get_is_subscribed(self, obj):
-        """"""
+        """Проверка, подписан ли пользователь на автора."""
         subscriber = self.context['request'].user
         author = obj.author
         if subscriber.is_anonymous:

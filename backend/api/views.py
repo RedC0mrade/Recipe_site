@@ -1,15 +1,18 @@
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
+from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.viewsets import ModelViewSet
+from rest_framework import status, mixins
+from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 
+from .filter import ChangSearchForName, FilterForRecipe
 from .pagination import UserPagination
-from .permission import AuthenticatedOrReadOnly, ReadOnly
+from .permission import AuthenticatedOrReadOnly, AdminOrReadOnly
 from .serializers import (DjoserUserSerializer, IngredientsSerializer,
                           PostRecipesSerializer, RecipesSerializer,
                           RecipeCartFavoriteSerializer, SubscribeSerializer,
@@ -65,12 +68,13 @@ class DjoserUserViewSet(UserViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class TagsViewSet(ModelViewSet):
+class TagsViewSet(mixins.RetrieveModelMixin,
+                  mixins.ListModelMixin,
+                  GenericViewSet):
     """Представление тэгов."""
 
     queryset = Tags.objects.all()
     serializer_class = TagsSerializer
-    permission_classes = (ReadOnly,)
     pagination_class = None
 
 
@@ -80,6 +84,9 @@ class RecipesViewsSet(ModelViewSet):
     queryset = Recipes.objects.all()
     pagination_class = UserPagination
     permission_classes = (AuthenticatedOrReadOnly,)
+    filter_backends = (DjangoFilterBackend,)
+    #filterset_fields = ('author', 'tags__slug')
+    filterset_class = FilterForRecipe
 
     def get_serializer_class(self):
         """Выбор серилизатора"""
@@ -171,9 +178,14 @@ class RecipesViewsSet(ModelViewSet):
                             status=status.HTTP_400_BAD_REQUEST)
 
 
-class IngredientsViewsSet(ModelViewSet):
+class IngredientsViewsSet(mixins.RetrieveModelMixin,
+                          mixins.ListModelMixin,
+                          GenericViewSet):
     """Представление ингредиентов."""
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientsSerializer
     pagination_class = None
+    filter_backends = (DjangoFilterBackend, SearchFilter)
+    search_fields = ('^name',)
+    filterset_class = ChangSearchForName

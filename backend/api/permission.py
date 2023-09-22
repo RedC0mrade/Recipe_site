@@ -20,16 +20,15 @@ class AuthenticatedOrReadOnly(permissions.BasePermission):
                 obj.author == request.user)
 
 
-class ReadOnly(permissions.BasePermission):
-
-    def has_permission(self, request, view):
-        return request.method in permissions.SAFE_METHODS
-
-    def has_object_permission(self, request, view, obj):
-        return request.method in permissions.SAFE_METHODS
-
-
 class AuthorOrReadOnly(permissions.BasePermission):
 
     def has_permission(self, request, view):
         pass
+
+
+class AdminOrReadOnly(permissions.BasePermission):
+    """Администратор или безопасный метод."""
+
+    def has_permission(self, request, view):
+        return (request.method in permissions.SAFE_METHODS
+                or request.user.is_staff)
