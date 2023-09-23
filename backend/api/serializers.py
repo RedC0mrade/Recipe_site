@@ -1,7 +1,8 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from django.db.models import F
-from rest_framework import serializers
+from rest_framework import serializers, status
+from rest_framework.exceptions import ValidationError
 from rest_framework.fields import IntegerField, SerializerMethodField
 from rest_framework.serializers import ModelSerializer
 from rest_framework.validators import UniqueTogetherValidator
@@ -126,6 +127,54 @@ class PostRecipesSerializer(ModelSerializer):
         fields = ('id', 'author', 'ingredients', 'tags', 'image',
                   'name', 'text', 'cooking_time')
 
+    def validate_ingredients(self, ingredients):
+        """Проверка ингредиентов."""
+
+        ingredients_list = []
+        if not ingredients:
+            raise ValidationError({'ошибка': 'Поле ингредиенты не заполнено'})
+        # ingredients_list = Ingredient.objects.values_list('id', flat=True)
+        # for i in value:
+        #     if i['id'] in ingredients_list:
+        #         raise ValidationError({'ошибка': 'Несуществующий ингредиент'})
+        for ingredient in ingredients:
+            try:
+                value = Ingredient.objects.get(id=ingredient['id'])
+            except Exception:
+                raise ValidationError({'ошибка': 'Несуществующий ингредиент'})
+            if value in ingredients_list:
+                raise ValidationError({'ошибка': 'Ингредиенты не должны '
+                                                 f'дублироваться'})
+            ingredients_list.append(value)
+            if ingredient['amount'] <= 0:
+                raise ValidationError({'ошибка': 'не указано количество'})
+        return ingredients
+
+    def validate_tags(self, tags):
+        """Проверка тэгов."""
+
+        tags_list = []
+        if not tags:
+            raise ValidationError({'ошибка': 'Поле тэг не заполнено'})
+        for tag in tags:
+            if tag in tags_list:
+                raise ValidationError({'ошибка': 'Тэг не должен повторяться'})
+            tags_list.append(tag)
+        return tags
+
+    def validate_image(self, image):
+        """Проверка картинки."""
+        if not image:
+            raise ValidationError({'ошибка': 'Поле картинка не заполнено'})
+        return image
+
+    def validate_cooking_time(self, cooking_time):
+        """Проверка времени приготовления."""
+        if not cooking_time:
+            raise ValidationError({'ошибка': 'Поле время ' 
+                                   f'приготовления не заполнено'})
+        return cooking_time
+
     def create(self, validated_data):
         """Создание многострадального рецепта."""
         ingredients = validated_data.pop('ingredients')
@@ -147,8 +196,23 @@ class PostRecipesSerializer(ModelSerializer):
 
     def update(self, instance, validated_data):
         """Обновление пецепта"""
-        ingredients = validated_data.pop('ingredients')
-        tags = validated_data.pop('tags')
+        print(instance)
+        print(validated_data)
+        try:
+            ingredients = validated_data.pop('ingredients')
+        except KeyError:
+            raise ValidationError({'ошибка': 'Поде Ингредиенты '
+                                   f'не заполнено'})
+        try:
+            tags = validated_data.pop('tags')
+        except KeyError:
+            raise ValidationError({'ошибка': 'Поле Тэг '
+                                   f'не заполнено'})
+        try:
+            validated_data.pop('image')
+        except KeyError:
+            raise ValidationError({'ошибка': 'Поле Картинка '
+                                   f'не заполнено'})
         instance = super().update(instance, validated_data)
         instance.ingredients.clear()
         instance.tags.clear()

@@ -163,7 +163,6 @@ class Recipes(models.Model):
     cooking_time = models.IntegerField(
         verbose_name='Время приготовления',
         validators=[validator_more_one],
-        default=1
     )
     ingredients = models.ManyToManyField(
         Ingredient,

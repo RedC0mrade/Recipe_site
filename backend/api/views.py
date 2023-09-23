@@ -85,7 +85,7 @@ class RecipesViewsSet(ModelViewSet):
     pagination_class = UserPagination
     permission_classes = (AuthenticatedOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
-    #filterset_fields = ('author', 'tags__slug')
+    # filterset_fields = ('author', 'tags__slug')
     filterset_class = FilterForRecipe
 
     def get_serializer_class(self):
