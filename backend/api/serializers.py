@@ -250,7 +250,7 @@ class RecipeCartFavoriteSerializer(ModelSerializer):
 class SubscribeSerializer(serializers.ModelSerializer):
     """Сериализатор подписок."""
 
-    id = serializers.StringRelatedField(source='author.id', read_only=True)
+    id = serializers.IntegerField(source='author.id', read_only=True)
     username = serializers.StringRelatedField(source='author.username')
     email = serializers.StringRelatedField(source='author.email')
     first_name = serializers.StringRelatedField(source='author.first_name')
@@ -270,7 +270,8 @@ class SubscribeSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         """Проверка, подписан ли пользователь на автора."""
-        subscriber = self.context['request'].user
+
+        subscriber = self.context['requests'].user
         author = obj.author
         if subscriber.is_anonymous:
             return False
@@ -279,8 +280,9 @@ class SubscribeSerializer(serializers.ModelSerializer):
 
     def get_recipes(self, obj):
         """Получение рецептов автора."""
+        
         recipes = obj.author.recipes.all()
-        request = self.context.get('request')
+        request = self.context.get('requests')
         recipes_limit = request.GET.get('recipes_limit')
         if recipes_limit:
             recipes = recipes[:int(recipes_limit)]

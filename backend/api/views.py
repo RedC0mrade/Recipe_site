@@ -31,7 +31,7 @@ class DjoserUserViewSet(UserViewSet):
 
     @action(methods=['get'],
             permission_classes=(IsAuthenticated,),
-            detail=False, )
+            detail=False,)
     def subscriptions(self, request):
         """Все подписки пользователя."""
 
@@ -54,15 +54,22 @@ class DjoserUserViewSet(UserViewSet):
             return Response({'Ошибка': 'Нельзя подписаться на себя'},
                             status=status.HTTP_400_BAD_REQUEST)
         if request.method == 'POST':
-            subscribe, _ = Subscriptions.objects.get_or_create(
-                subscriber=subscriber, author=author)
+            try:
+                subscribe = Subscriptions.objects.create(
+                    subscriber=subscriber, author=author)
+            except Exception:
+                return Response({'ошибка': 'Нельзя подписаться '
+                                 f'второй раз'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
             serializer = SubscribeSerializer(subscribe,
-                                             context={'request': request})
+                                             context={'requests': request})
             return Response(serializer.data, status.HTTP_201_CREATED)
         if request.method == 'DELETE':
             if not Subscriptions.objects.filter(subscriber=subscriber,
                                                 author=author).exists():
-                return Response({'Ошибка': 'Нельзя отписаться не подписавшись'})
+                return Response({'Ошибка': 'Нельзя отписаться не подписавшись'},
+                                status=status.HTTP_400_BAD_REQUEST)
             Subscriptions.objects.filter(subscriber=subscriber,
                                          author=author).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -82,11 +89,10 @@ class RecipesViewsSet(ModelViewSet):
     """Представление рецептов."""
 
     queryset = Recipes.objects.all()
-    pagination_class = UserPagination
     permission_classes = (AuthenticatedOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
-    # filterset_fields = ('author', 'tags__slug')
     filterset_class = FilterForRecipe
+    pagination_class = UserPagination
 
     def get_serializer_class(self):
         """Выбор серилизатора"""
@@ -104,13 +110,19 @@ class RecipesViewsSet(ModelViewSet):
 
     @action(methods=['post', 'delete'],
             permission_classes=[IsAuthenticated],
-            detail=True)
+            detail=True,
+            )
     def shopping_cart(self, request, pk):
         """Добавление/удаление рецепта в корзину"""
+
         if request.method == 'POST':
             if not Cart.objects.filter(user=request.user,
                                        recipe__id=pk).exists():
-                recipe = get_object_or_404(Recipes, id=pk)
+                try:
+                    recipe = Recipes.objects.get(id=pk)
+                except Exception:
+                    return Response({'ошибка': 'такого рецепта нет'},
+                                    status=status.HTTP_400_BAD_REQUEST)
                 Cart.objects.create(user=request.user, recipe=recipe)
                 serializer = RecipeCartFavoriteSerializer(recipe)
                 return Response(serializer.data,
@@ -118,6 +130,11 @@ class RecipesViewsSet(ModelViewSet):
             return Response({'ошибка': 'Рецепт уже в корзине'},
                             status=status.HTTP_400_BAD_REQUEST)
         else:
+            try:
+                Recipes.objects.get(id=pk)
+            except Exception:
+                return Response({'ошибка': 'такого рецепта нет'},
+                                status=status.HTTP_404_NOT_FOUND)
             if Cart.objects.filter(user=request.user, recipe__id=pk).exists():
                 Cart.objects.filter(user=request.user, recipe__id=pk).delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
@@ -161,7 +178,11 @@ class RecipesViewsSet(ModelViewSet):
         if request.method == 'POST':
             if not Favorite.objects.filter(user=request.user,
                                            recipe__id=pk).exists():
-                recipe = get_object_or_404(Recipes, id=pk)
+                try:
+                    recipe = Recipes.objects.get(id=pk)
+                except Exception:
+                    return Response({'ошибка': 'такого рецепта нет'},
+                                    status=status.HTTP_400_BAD_REQUEST)
                 Favorite.objects.create(user=request.user, recipe=recipe)
                 serializer = RecipeCartFavoriteSerializer(recipe)
                 return Response(serializer.data,
@@ -169,6 +190,11 @@ class RecipesViewsSet(ModelViewSet):
             return Response({'ошибка': 'Рецепт уже в корзине'},
                             status=status.HTTP_400_BAD_REQUEST)
         else:
+            try:
+                Recipes.objects.get(id=pk)
+            except Exception:
+                return Response({'ошибка': 'такого рецепта нет'},
+                                status=status.HTTP_404_NOT_FOUND)
             if Favorite.objects.filter(user=request.user,
                                        recipe__id=pk).exists():
                 Favorite.objects.filter(user=request.user,
