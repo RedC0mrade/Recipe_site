@@ -7,11 +7,11 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure--yy-6unak5f#b(^ctbi(xbyjb0oo-x+%4xl03^#fszr$&9nrqm'
+SECRET_KEY = os.getenv('SECRET_KEY', 'qweqrwfsddshrthsrth')
 
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False')
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS').split(',')
 
 # Application definition
 
@@ -51,9 +51,12 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
-
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+    ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 6,
+    'PAGE_SIZE': 10,
 }
 
 DJOSER = {
@@ -140,3 +143,29 @@ STATIC_URL = '/static_backend/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+if DEBUG:
+    STATICFILES_DIRS = [
+        os.path.join(BASE_DIR, 'static_backend'),
+    ]
+
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+else:
+    STATIC_ROOT = os.path.join(BASE_DIR, 'static_backend')
+
+    DATABASES = {
+        'default': {
+            'ENGINE': os.getenv('ENGINE',
+                                default='django.db.backends.postgresql'),
+            'NAME': os.getenv('NAME', default='postgres'),
+            'USER': os.getenv('USER', default='postgres'),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD', default='postgres'),
+            'HOST': os.getenv('HOST', default='db'),
+            'PORT': os.getenv('PORT', default=5432)
+        }
+    }
