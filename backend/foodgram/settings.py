@@ -98,8 +98,13 @@ WSGI_APPLICATION = 'foodgram.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': os.getenv('ENGINE',
+                            default='django.db.backends.postgresql'),
+        'NAME': os.getenv('NAME', default='postgres'),
+        'USER': os.getenv('USER', default='postgres'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', default='postgres'),
+        'HOST': os.getenv('HOST', default='db'),
+        'PORT': os.getenv('PORT', default=5432)
     }
 }
 
@@ -148,24 +153,5 @@ if DEBUG:
     STATICFILES_DIRS = [
         os.path.join(BASE_DIR, 'static_backend'),
     ]
-
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
 else:
     STATIC_ROOT = os.path.join(BASE_DIR, 'static_backend')
-
-    DATABASES = {
-        'default': {
-            'ENGINE': os.getenv('ENGINE',
-                                default='django.db.backends.postgresql'),
-            'NAME': os.getenv('NAME', default='postgres'),
-            'USER': os.getenv('USER', default='postgres'),
-            'PASSWORD': os.getenv('POSTGRES_PASSWORD', default='postgres'),
-            'HOST': os.getenv('HOST', default='db'),
-            'PORT': os.getenv('PORT', default=5432)
-        }
-    }
