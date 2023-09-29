@@ -3,22 +3,23 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from rest_framework.filters import SearchFilter
-from rest_framework.response import Response
-from rest_framework import status, mixins
-from rest_framework.viewsets import ModelViewSet, GenericViewSet
+from rest_framework import mixins, status
 from rest_framework.decorators import action
+from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet, ModelViewSet
+
+from recipes.models import (Cart, Favorite, Ingredient, IngredientsOfRecipe,
+                            Recipes, Subscriptions, Tags, User,)
 
 from .filter import ChangSearchForName, FilterForRecipe
 from .pagination import UserPagination
-from .permission import AuthenticatedOrReadOnly, AdminOrReadOnly
+from .permission import AuthenticatedOrReadOnly
 from .serializers import (DjoserUserSerializer, IngredientsSerializer,
-                          PostRecipesSerializer, RecipesSerializer,
-                          RecipeCartFavoriteSerializer, SubscribeSerializer,
+                          PostRecipesSerializer, RecipeCartFavoriteSerializer,
+                          RecipesSerializer, SubscribeSerializer,
                           TagsSerializer)
-from recipes.models import (Cart, Favorite, Ingredient, IngredientsOfRecipe,
-                            Recipes, Subscriptions, Tags, User)
 
 
 class DjoserUserViewSet(UserViewSet):
@@ -34,7 +35,6 @@ class DjoserUserViewSet(UserViewSet):
             detail=False,)
     def subscriptions(self, request):
         """Все подписки пользователя."""
-
         page = self.paginate_queryset(Subscriptions.objects.filter(
             subscriber=request.user))
         serializer = SubscribeSerializer(page, many=True,
@@ -47,7 +47,6 @@ class DjoserUserViewSet(UserViewSet):
             detail=True)
     def subscribe(self, request, **kwargs):
         """Подписка."""
-
         subscriber = request.user
         author = get_object_or_404(User, id=self.kwargs.get('id'))
         if subscriber == author:
@@ -59,7 +58,7 @@ class DjoserUserViewSet(UserViewSet):
                     subscriber=subscriber, author=author)
             except Exception:
                 return Response({'ошибка': 'Нельзя подписаться '
-                                 f'второй раз'},
+                                 'второй раз'},
                                 status=status.HTTP_400_BAD_REQUEST)
 
             serializer = SubscribeSerializer(subscribe,
@@ -68,7 +67,8 @@ class DjoserUserViewSet(UserViewSet):
         if request.method == 'DELETE':
             if not Subscriptions.objects.filter(subscriber=subscriber,
                                                 author=author).exists():
-                return Response({'Ошибка': 'Нельзя отписаться не подписавшись'},
+                return Response({'Ошибка': 'Нельзя отписаться '
+                                           'не подписавшись'},
                                 status=status.HTTP_400_BAD_REQUEST)
             Subscriptions.objects.filter(subscriber=subscriber,
                                          author=author).delete()
@@ -95,17 +95,17 @@ class RecipesViewsSet(ModelViewSet):
     pagination_class = UserPagination
 
     def get_serializer_class(self):
-        """Выбор серилизатора"""
+        """Выбор серилизатора."""
         if self.request.method == 'POST' or self.request.method == 'PATCH':
             return PostRecipesSerializer
         return RecipesSerializer
 
     def perform_create(self, serializer):
-        """Создание рецепта"""
+        """Создание рецепта."""
         serializer.save(author=self.request.user)
 
     def perform_update(self, serializer):
-        """Изменение созданного рецепта"""
+        """Изменение созданного рецепта."""
         serializer.save(author=self.request.user)
 
     @action(methods=['post', 'delete'],
@@ -113,8 +113,7 @@ class RecipesViewsSet(ModelViewSet):
             detail=True,
             )
     def shopping_cart(self, request, pk):
-        """Добавление/удаление рецепта в корзину"""
-
+        """Добавление/удаление рецепта в корзину."""
         if request.method == 'POST':
             if not Cart.objects.filter(user=request.user,
                                        recipe__id=pk).exists():
@@ -145,7 +144,7 @@ class RecipesViewsSet(ModelViewSet):
             permission_classes=[IsAuthenticated],
             detail=False)
     def download_shopping_cart(self, request):
-        """Скачивание рецепта"""
+        """Скачивание рецепта."""
         if request.user.cart.exists():
             ingredients_recipe = IngredientsOfRecipe.objects.filter(
                 recipe__cart__user=request.user)
@@ -163,10 +162,11 @@ class RecipesViewsSet(ModelViewSet):
                               f'{ingredient["ingredient__measurement_unit"]} '
                               f'({ingredient["amount"]})\n')
 
-            filename = f'Список покупок.txt'
+            filename = 'Список покупок.txt'
             response = HttpResponse(shop_cart,
                                     content_type='text/plain')
-            response['Content-Disposition'] = f'attachment; filename={filename}'
+            response['Content-Disposition'] = (f'attachment; '
+                                               f'filename={filename}')
             return response
         return Response(status=status.HTTP_400_BAD_REQUEST)
 

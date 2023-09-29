@@ -9,6 +9,7 @@ UsernameValidator = UnicodeUsernameValidator()
 
 class User(AbstractUser):
     """Модель пользователя."""
+
     username = models.CharField(
         verbose_name='Имя пользователя',
         blank=False,
@@ -41,8 +42,6 @@ class User(AbstractUser):
         blank=False,
         null=False
     )
-    # USERNAME_FIELD = 'email'
-    # REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
     class Meta:
         verbose_name = 'Пользователь'
@@ -55,6 +54,7 @@ class User(AbstractUser):
 
 class Subscriptions(models.Model):
     """Подписка."""
+
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -81,6 +81,7 @@ class Subscriptions(models.Model):
 
 class Tags(models.Model):
     """Модель тэга."""
+
     name = models.CharField(
         verbose_name='Имя',
         blank=False,
@@ -113,6 +114,7 @@ class Tags(models.Model):
 
 class Ingredient(models.Model):
     """Ингредиенты."""
+
     name = models.CharField(
         verbose_name='Название ингридиента',
         max_length=200
@@ -133,6 +135,7 @@ class Ingredient(models.Model):
 
 class Recipes(models.Model):
     """Рецепт."""
+
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -154,7 +157,7 @@ class Recipes(models.Model):
         Tags,
         verbose_name='Тэг',
         related_name='recipes',
-        )
+    )
     text = models.CharField(
         verbose_name='Текст рецепта',
         blank=False,
@@ -182,6 +185,7 @@ class Recipes(models.Model):
 
 class IngredientsOfRecipe(models.Model):
     """Ингредиенты в рецепте."""
+
     recipe = models.ForeignKey(
         Recipes,
         on_delete=models.CASCADE,
@@ -210,6 +214,7 @@ class IngredientsOfRecipe(models.Model):
 
 class Favorite(models.Model):
     """Избранные рецепты."""
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -235,6 +240,7 @@ class Favorite(models.Model):
 
 class Cart(models.Model):
     """Корзина покупателя."""
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
