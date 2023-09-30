@@ -14,7 +14,7 @@ services:
     restart: always
 
   backend:
-    image: redc0mrade/foodrgam_backend:latest
+    image: redc0mrade/foodrgam_backend
     volumes:
       - static:/app/static/
       - media:/app/media/
@@ -25,7 +25,7 @@ services:
     restart: always
 
   frontend:
-    image: redc0mrade/foodrgam_frontend:latest
+    image: redc0mrade/foodrgam_frontend
     command: cp -r /app/build/. /app/static/
     volumes:
      - static:/app/static/
