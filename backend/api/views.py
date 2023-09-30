@@ -9,7 +9,6 @@ from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
-
 from recipes.models import (Cart, Favorite, Ingredient, IngredientsOfRecipe,
                             Recipes, Subscriptions, Tags, User,)
 
