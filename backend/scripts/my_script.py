@@ -36,6 +36,7 @@ def run():
         tags_data.append(obj)
     Tags.objects.bulk_create(tags_data)
 
+    user_data = []
     obj = User()
     obj.username = 'admin'
     obj.email = 'admin@admin.com'
@@ -43,4 +44,5 @@ def run():
     obj.last_name = 'admin'
     obj.password = 'admin'
     obj.is_staff = True
-    obj.save()
+    user_data.append(obj)
+    User.objects.bulk_create(user_data)
