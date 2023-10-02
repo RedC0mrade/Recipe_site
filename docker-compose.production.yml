@@ -27,8 +27,9 @@ services:
 
   frontend:
     image: redc0mrade/foodgram_frontend
+    command: cp -r /app/build/. /app/static/
     volumes:
-      - ./frontend/:/app/result_build/
+     - foodgram_static:/app/static/
 
   gateway:
     image: redc0mrade/foodgram_gateway
