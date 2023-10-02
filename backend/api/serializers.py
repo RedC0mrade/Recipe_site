@@ -20,9 +20,8 @@ class DjoserUserSerializer(UserSerializer):
         author = obj
         if subscriber.is_anonymous:
             return False
-        else:
-            return Subscriptions.objects.filter(subscriber=subscriber,
-                                                author=author).exists()
+        return Subscriptions.objects.filter(subscriber=subscriber,
+                                            author=author).exists()
 
     class Meta:
         model = User

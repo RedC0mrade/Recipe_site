@@ -72,6 +72,8 @@ class DjoserUserViewSet(UserViewSet):
             Subscriptions.objects.filter(subscriber=subscriber,
                                          author=author).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({'Ошибка': 'Неправильный метод запроса'},
+                        status=status.HTTP_400_BAD_REQUEST)
 
 
 class TagsViewSet(mixins.RetrieveModelMixin,
@@ -127,17 +129,16 @@ class RecipesViewsSet(ModelViewSet):
                                 status=status.HTTP_201_CREATED)
             return Response({'ошибка': 'Рецепт уже в корзине'},
                             status=status.HTTP_400_BAD_REQUEST)
-        else:
-            try:
-                Recipes.objects.get(id=pk)
-            except Exception:
-                return Response({'ошибка': 'такого рецепта нет'},
-                                status=status.HTTP_404_NOT_FOUND)
-            if Cart.objects.filter(user=request.user, recipe__id=pk).exists():
-                Cart.objects.filter(user=request.user, recipe__id=pk).delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            return Response({'ощибка': 'Такого рецепта нет'},
-                            status=status.HTTP_400_BAD_REQUEST)
+        try:
+            Recipes.objects.get(id=pk)
+        except Exception:
+            return Response({'ошибка': 'такого рецепта нет'},
+                            status=status.HTTP_404_NOT_FOUND)
+        if Cart.objects.filter(user=request.user, recipe__id=pk).exists():
+            Cart.objects.filter(user=request.user, recipe__id=pk).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({'ощибка': 'Такого рецепта нет'},
+                        status=status.HTTP_400_BAD_REQUEST)
 
     @action(methods=['get'],
             permission_classes=[IsAuthenticated],
@@ -188,19 +189,18 @@ class RecipesViewsSet(ModelViewSet):
                                 status=status.HTTP_201_CREATED)
             return Response({'ошибка': 'Рецепт уже в корзине'},
                             status=status.HTTP_400_BAD_REQUEST)
-        else:
-            try:
-                Recipes.objects.get(id=pk)
-            except Exception:
-                return Response({'ошибка': 'такого рецепта нет'},
-                                status=status.HTTP_404_NOT_FOUND)
-            if Favorite.objects.filter(user=request.user,
-                                       recipe__id=pk).exists():
-                Favorite.objects.filter(user=request.user,
-                                        recipe__id=pk).delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            return Response({'ошибка': 'Такого рецепта нет'},
-                            status=status.HTTP_400_BAD_REQUEST)
+        try:
+            Recipes.objects.get(id=pk)
+        except Exception:
+            return Response({'ошибка': 'такого рецепта нет'},
+                            status=status.HTTP_404_NOT_FOUND)
+        if Favorite.objects.filter(user=request.user,
+                                   recipe__id=pk).exists():
+            Favorite.objects.filter(user=request.user,
+                                    recipe__id=pk).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({'ошибка': 'Такого рецепта нет'},
+                        status=status.HTTP_400_BAD_REQUEST)
 
 
 class IngredientsViewsSet(mixins.RetrieveModelMixin,
