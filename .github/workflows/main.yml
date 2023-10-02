@@ -138,4 +138,4 @@ jobs:
       with:
         to: ${{ secrets.TELEGRAM_TO }}
         token: ${{ secrets.TELEGRAM_TOKEN }}
-        message: Деплой успешно выполнен!!
+        message: Деплой успешно выполнен!
