@@ -109,7 +109,6 @@ ENV/
 env.bak/
 venv.bak/
 media/
-scripts/
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -130,3 +129,5 @@ dmypy.json
 
 # .idea
 .idea
+/backend/recipes/migrations/
+
