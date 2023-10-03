@@ -129,5 +129,4 @@ dmypy.json
 
 # .idea
 .idea
-/backend/recipes/migrations/
 
