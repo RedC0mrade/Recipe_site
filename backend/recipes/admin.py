@@ -20,7 +20,7 @@ class FavoriteAdmin(admin.ModelAdmin):
 
     list_display = ('user', 'recipe')
     search_fields = ('user', 'recipe')
-    list_filter = ('user', 'recipe')
+    list_filter = ('user',)
     empty_value_display = '=пусто='
 
 
@@ -40,7 +40,7 @@ class IngredientsOfRecipeAdmin(admin.ModelAdmin):
 
     list_display = ('recipe', 'ingredient', 'amount')
     search_fields = ('recipe', 'ingredient', 'amount')
-    list_filter = ('recipe', 'ingredient', 'amount')
+    list_filter = ('ingredient',)
     empty_value_display = '=пусто='
 
 
@@ -96,10 +96,21 @@ class RecipesAdmin(admin.ModelAdmin):
 class SubscriptionsAdmin(admin.ModelAdmin):
     """Админка подписок."""
 
-    list_display = ('author', 'subscriber')
+    list_display = ('id', 'author', 'subscriber',
+                    'email_subscriber', 'email_author')
     search_fields = ('author', 'subscriber')
     list_filter = ('author', 'subscriber')
     empty_value_display = '=пусто='
+
+    @admin.display(description='Почта подписчика')
+    def email_subscriber(self, obj):
+        """Получаем почту подписчика."""
+        return obj.subscriber.email
+
+    @admin.display(description='Почта автора')
+    def email_author(self, obj):
+        """Получаем почту автора."""
+        return obj.author.email
 
 
 @admin.register(Tags)

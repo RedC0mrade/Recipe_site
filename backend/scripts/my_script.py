@@ -7,7 +7,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 csv_file_path = os.path.join(current_dir, 'ingredients.csv')
 
 TAGS_NAMES = ('Breakfast', 'Lunch', 'Dinner')
-TAGS_COLORS = ('#808080', '#FF00FF', '#C0C0C0')
+TAGS_COLORS = ('#00ff00', '#FF00FF', '##0000ff')
 TAGS_SLUG = ('breakfast', 'lunch', 'dinner')
 
 
@@ -17,8 +17,8 @@ def run():
 
     Выполнить команду python manage.py runscript my_script -v2.
     """
-    with open(csv_file_path, encoding='utf8') as f:
-        reader = csv.reader(f)
+    with open(csv_file_path, encoding='utf8') as ingredients:
+        reader = csv.reader(ingredients)
         data = []
         for row in reader:
             obj = Ingredient()
@@ -36,6 +36,6 @@ def run():
         tags_data.append(obj)
     Tags.objects.bulk_create(tags_data)
 
-    superuser = User.objects.create_superuser('admin', 'admin@example.com',
+    superuser = User.objects.create_superuser('admin', 'admin@admin.com',
                                               'admin')
     superuser.save()
