@@ -2,6 +2,8 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 
+from constants import MAX_LENGHT_NAME, MAX_LENGHT_EMAIL, MAX_LENGHT_COLOR, \
+    MAX_LENGHT_TEXT
 from .validator import validator_more_one
 
 UsernameValidator = UnicodeUsernameValidator()
@@ -15,29 +17,29 @@ class User(AbstractUser):
         blank=False,
         unique=True,
         validators=(UsernameValidator,),
-        max_length=150,
+        max_length=MAX_LENGHT_NAME,
         null=False
     )
     email = models.EmailField(
         verbose_name='email address',
         blank=False,
         unique=True,
-        max_length=254,
+        max_length=MAX_LENGHT_EMAIL,
         null=False
     )
     first_name = models.CharField(
         verbose_name='Имя',
-        max_length=150,
+        max_length=MAX_LENGHT_NAME,
         blank=False
     )
     last_name = models.CharField(
         verbose_name='Фамилия',
-        max_length=150,
+        max_length=MAX_LENGHT_NAME,
         blank=False
     )
     password = models.CharField(
         verbose_name='Пароль',
-        max_length=150,
+        max_length=MAX_LENGHT_NAME,
         blank=False,
         null=False
     )
@@ -86,20 +88,20 @@ class Tags(models.Model):
         blank=False,
         unique=True,
         null=False,
-        max_length=150
+        max_length=MAX_LENGHT_NAME
     )
     color = models.CharField(
         verbose_name='Цвет',
         blank=False,
         null=False,
-        max_length=7,
+        max_length=MAX_LENGHT_COLOR,
     )
     slug = models.SlugField(
         verbose_name='Слаг',
         blank=False,
         unique=True,
         null=False,
-        max_length=150
+        max_length=MAX_LENGHT_NAME
     )
 
     class Meta:
@@ -116,11 +118,11 @@ class Ingredient(models.Model):
 
     name = models.CharField(
         verbose_name='Название ингридиента',
-        max_length=200
+        max_length=MAX_LENGHT_NAME
     )
     measurement_unit = models.CharField(
         verbose_name='Единица измерения',
-        max_length=200
+        max_length=MAX_LENGHT_NAME
     )
 
     class Meta:
@@ -150,7 +152,7 @@ class Recipes(models.Model):
         verbose_name='Название блюда',
         blank=False,
         null=False,
-        max_length=200
+        max_length=MAX_LENGHT_NAME
     )
     tags = models.ManyToManyField(
         Tags,
@@ -160,7 +162,7 @@ class Recipes(models.Model):
     text = models.CharField(
         verbose_name='Текст рецепта',
         blank=False,
-        max_length=1000
+        max_length=MAX_LENGHT_TEXT
     )
     cooking_time = models.IntegerField(
         verbose_name='Время приготовления',
