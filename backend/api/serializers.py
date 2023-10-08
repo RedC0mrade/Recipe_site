@@ -17,11 +17,8 @@ class DjoserUserSerializer(UserSerializer):
     def get_is_subscribed(self, obj):
         """Получение значения подписки пользователя на автора."""
         subscriber = self.context.get('request').user
-        author = obj
-        if subscriber.is_anonymous:
-            return False
-        return Subscriptions.objects.filter(subscriber=subscriber,
-                                            author=author).exists()
+        return (subscriber.is_authenticated
+                and obj.following.filter(subscriber=subscriber).exists())
 
     class Meta:
         model = User
@@ -37,6 +34,14 @@ class DjoserUserCreateSerializer(UserCreateSerializer):
         fields = ('username', 'email', 'first_name',
                   'last_name', 'password', 'id')
 
+        extra_kwargs = {
+            'first_name': {'required': True},
+            'last_name': {'required': True},
+            'password': {'write_only': True},
+            'email': {'required': True},
+            'username': {'required': True},
+        }
+
 
 class TagsSerializer(serializers.ModelSerializer):
     """Сериализатор тэгов."""
@@ -44,6 +49,14 @@ class TagsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tags
         fields = ('id', 'name', 'color', 'slug')
+
+
+class IngredientsSerializer(serializers.ModelSerializer):
+    """Сериализатор ингредиентов."""
+
+    class Meta:
+        model = Ingredient
+        fields = ('id', 'name', 'measurement_unit')
 
 
 class RecipesSerializer(serializers.ModelSerializer):
@@ -83,14 +96,6 @@ class RecipesSerializer(serializers.ModelSerializer):
             'measurement_unit',
             amount=F('ingredients_in_recipe__amount')
         )
-
-
-class IngredientsSerializer(serializers.ModelSerializer):
-    """Сериализатор ингредиентов."""
-
-    class Meta:
-        model = Ingredient
-        fields = ('id', 'name', 'measurement_unit')
 
 
 class IngredientsOfRecipeSerializer(serializers.ModelSerializer):

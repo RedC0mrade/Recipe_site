@@ -6,15 +6,15 @@ from djoser.views import UserViewSet
 from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from recipes.models import (Cart, Favorite, Ingredient, IngredientsOfRecipe,
                             Recipes, Subscriptions, Tags, User,)
 
-from .filter import ChangSearchForName, FilterForRecipe
+from .filters import ChangSearchForName, FilterForRecipe
 from .pagination import UserPagination
-from .permission import AuthenticatedOrReadOnly
+from .permission import AuthorOrReadOnly, AuthenticatedOrAnonymous
 from .serializers import (DjoserUserSerializer, IngredientsSerializer,
                           PostRecipesSerializer, RecipeCartFavoriteSerializer,
                           RecipesSerializer, SubscribeSerializer,
@@ -27,7 +27,14 @@ class DjoserUserViewSet(UserViewSet):
     queryset = User.objects.all()
     serializer_class = DjoserUserSerializer
     pagination_class = UserPagination
-    permission_classes = (AuthenticatedOrReadOnly,)
+    permission_classes = (AuthorOrReadOnly,)
+
+    def get_permissions(self):
+        if self.action == 'me':
+            return [AuthenticatedOrAnonymous(), ]
+        elif self.action == 'create':
+            return [AllowAny(), ]
+        return [AuthorOrReadOnly(), ]
 
     @action(methods=['get'],
             permission_classes=(IsAuthenticated,),
@@ -90,7 +97,7 @@ class RecipesViewsSet(ModelViewSet):
     """Представление рецептов."""
 
     queryset = Recipes.objects.all()
-    permission_classes = (AuthenticatedOrReadOnly,)
+    permission_classes = (AuthorOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = FilterForRecipe
     pagination_class = UserPagination

@@ -12,37 +12,10 @@ UsernameValidator = UnicodeUsernameValidator()
 class User(AbstractUser):
     """Модель пользователя."""
 
-    username = models.CharField(
-        verbose_name='Имя пользователя',
-        blank=False,
-        unique=True,
-        validators=(UsernameValidator,),
-        max_length=MAX_LENGHT_NAME,
-        null=False
-    )
-    email = models.EmailField(
-        verbose_name='email address',
-        blank=False,
-        unique=True,
-        max_length=MAX_LENGHT_EMAIL,
-        null=False
-    )
-    first_name = models.CharField(
-        verbose_name='Имя',
-        max_length=MAX_LENGHT_NAME,
-        blank=False
-    )
-    last_name = models.CharField(
-        verbose_name='Фамилия',
-        max_length=MAX_LENGHT_NAME,
-        blank=False
-    )
-    password = models.CharField(
-        verbose_name='Пароль',
-        max_length=MAX_LENGHT_NAME,
-        blank=False,
-        null=False
-    )
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
+    USERNAME_FIELD = 'email'
+
+    email = models.EmailField(unique=True)
 
     class Meta:
         verbose_name = 'Пользователь'

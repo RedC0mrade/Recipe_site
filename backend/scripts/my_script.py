@@ -7,7 +7,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 csv_file_path = os.path.join(current_dir, 'ingredients.csv')
 
 TAGS_NAMES = ('Breakfast', 'Lunch', 'Dinner')
-TAGS_COLORS = ('#00ff00', '#FF00FF', '##0000ff')
+TAGS_COLORS = ('#00ff00', '#FF00FF', '#0000ff')
 TAGS_SLUG = ('breakfast', 'lunch', 'dinner')
 
 
@@ -36,6 +36,9 @@ def run():
         tags_data.append(obj)
     Tags.objects.bulk_create(tags_data)
 
-    superuser = User.objects.create_superuser('admin', 'admin@admin.com',
-                                              'admin')
+    superuser = User.objects.create_superuser(username='admin',
+                                              email='admin@admin.com',
+                                              first_name='admin',
+                                              last_name='admin',
+                                              password='admin')
     superuser.save()
