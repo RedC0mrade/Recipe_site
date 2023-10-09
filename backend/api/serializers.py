@@ -1,10 +1,12 @@
-from django.db.models import F
+from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import IntegerField, SerializerMethodField
 from rest_framework.validators import UniqueTogetherValidator
+
+from constants import ZERO
 from recipes.models import (Ingredient, IngredientsOfRecipe, Recipes,
                             Subscriptions, Tags, User)
 
@@ -59,6 +61,25 @@ class IngredientsSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'measurement_unit')
 
 
+class IngredientsOfRecipeSerializer(serializers.ModelSerializer):
+    """Сериализатор для ингредиентов в рецепте."""
+    id = serializers.ReadOnlyField(source='ingredient.id')
+    name = serializers.ReadOnlyField(source='ingredient.name')
+    measurement_unit = serializers.ReadOnlyField(
+        source='ingredient.measurement_unit'
+    )
+
+    class Meta:
+        model = IngredientsOfRecipe
+        fields = ('id', 'name', 'measurement_unit', 'amount')
+        validators = [
+            UniqueTogetherValidator(
+                queryset=IngredientsOfRecipe.objects.all(),
+                fields=['ingredient', 'recipe']
+            )
+        ]
+
+
 class RecipesSerializer(serializers.ModelSerializer):
     """Сериализатор рецептов."""
 
@@ -66,13 +87,11 @@ class RecipesSerializer(serializers.ModelSerializer):
     is_in_shopping_cart = SerializerMethodField(read_only=True)
     author = DjoserUserSerializer(read_only=True)
     tags = TagsSerializer(read_only=True, many=True)
-    ingredients = SerializerMethodField()
-
-    class Meta:
-        model = Recipes
-        fields = ('id', 'tags', 'author', 'ingredients',
-                  'is_favorited', 'is_in_shopping_cart', 'name',
-                  'image', 'text', 'cooking_time')
+    ingredients = IngredientsOfRecipeSerializer(
+        read_only=True,
+        many=True,
+        source='ingredients_in_recipe',
+    )
 
     def get_is_favorited(self, obj):
         """Получаем значение, добавлен ли рецепт избранное."""
@@ -88,28 +107,11 @@ class RecipesSerializer(serializers.ModelSerializer):
             return False
         return user.cart.filter(recipe=obj).exists()
 
-    def get_ingredients(self, obj):
-        """Получаем добавленные ингредиенты в рецепт."""
-        return obj.ingredients.values(
-            'id',
-            'name',
-            'measurement_unit',
-            amount=F('ingredients_in_recipe__amount')
-        )
-
-
-class IngredientsOfRecipeSerializer(serializers.ModelSerializer):
-    """Сериализатор для ингредиентов в рецепте."""
-
-    def to_representation(self, instance):
-        """Преобразуем инстанс в представление."""
-        data = super().to_representation(instance)
-        data['ingredient'] = IngredientsSerializer(instance.ingredient).data
-        return data
-
     class Meta:
-        model = IngredientsOfRecipe
-        fields = ('ingredient', 'amount')
+        model = Recipes
+        fields = ('id', 'tags', 'author', 'ingredients',
+                  'is_favorited', 'is_in_shopping_cart', 'name',
+                  'image', 'text', 'cooking_time')
 
 
 class PostIngredientsOfRecipeSerializer(serializers.ModelSerializer):
@@ -140,47 +142,50 @@ class PostRecipesSerializer(serializers.ModelSerializer):
         fields = ('id', 'author', 'ingredients', 'tags', 'image',
                   'name', 'text', 'cooking_time')
 
-    def validate_ingredients(self, ingredients):
-        """Проверка ингредиентов."""
+    def validate(self, attrs):
+        """Валидация создания и изменения."""
+        ingredients = self.initial_data.get('ingredients')
         ingredients_list = []
         if not ingredients:
-            raise ValidationError({'ошибка': 'Поле ингредиенты не заполнено'})
+            raise serializers.ValidationError({
+                'ingredients': 'Нужен хоть один ингридиент для рецепта'})
         for ingredient in ingredients:
-            try:
-                value = Ingredient.objects.get(id=ingredient['id'])
-            except Exception:
-                raise ValidationError({'ошибка': 'Несуществующий ингредиент'})
+            value = get_object_or_404(Ingredient, id=ingredient['id'])
             if value in ingredients_list:
                 raise ValidationError({'ошибка': 'Ингредиенты не должны '
                                                  'дублироваться'})
             ingredients_list.append(value)
-            if ingredient['amount'] <= 0:
-                raise ValidationError({'ошибка': 'не указано количество'})
-        return ingredients
-
-    def validate_tags(self, tags):
-        """Проверка тэгов."""
+            if ingredient['amount'] <= ZERO:
+                raise ValidationError({'ошибка': 'не верно '
+                                                 'указано количество'})
+        tags = self.initial_data.get('tags')
         tags_list = []
         if not tags:
-            raise ValidationError({'ошибка': 'Поле тэг не заполнено'})
+            raise ValidationError({'ошибка': 'Поле ингредиенты не заполнено'})
         for tag in tags:
             if tag in tags_list:
                 raise ValidationError({'ошибка': 'Тэг не должен повторяться'})
             tags_list.append(tag)
-        return tags
-
-    def validate_image(self, image):
-        """Проверка картинки."""
+        image = self.initial_data.get('image')
         if not image:
             raise ValidationError({'ошибка': 'Поле картинка не заполнено'})
-        return image
-
-    def validate_cooking_time(self, cooking_time):
-        """Проверка времени приготовления."""
-        if not cooking_time:
+        cooking_time = self.initial_data.get('cooking_time')
+        if not cooking_time or cooking_time <= ZERO:
             raise ValidationError({'ошибка': 'Поле время '
-                                   'приготовления не заполнено'})
-        return cooking_time
+                                   'заполнено не корректно'})
+        return attrs
+
+    def ingredients_amounts(self, ingredients, recipe):
+        recipe_ingredients = []
+        for ingredient_data in ingredients:
+            amount = ingredient_data['amount']
+            recipe_ingredient = IngredientsOfRecipe(
+                ingredient_id=ingredient_data.get('id'),
+                recipe=recipe,
+                amount=amount
+            )
+            recipe_ingredients.append(recipe_ingredient)
+        IngredientsOfRecipe.objects.bulk_create(recipe_ingredients)
 
     def create(self, validated_data):
         """Создание многострадального рецепта."""
@@ -188,53 +193,35 @@ class PostRecipesSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags')
         recipe = Recipes.objects.create(**validated_data)
         recipe.tags.set(tags)
-        recipe_ingredients = []
-        for ingredient_data in ingredients:
-            ingredient = Ingredient.objects.get(id=ingredient_data['id'])
-            amount = ingredient_data['amount']
-            recipe_ingredient = IngredientsOfRecipe(
-                ingredient=ingredient,
-                recipe=recipe,
-                amount=amount
-            )
-            recipe_ingredients.append(recipe_ingredient)
-        IngredientsOfRecipe.objects.bulk_create(recipe_ingredients)
+        self.ingredients_amounts(ingredients, recipe)
+
         return recipe
 
     def update(self, instance, validated_data):
         """Обновление пецепта."""
-        print(instance)
         print(validated_data)
-        try:
-            ingredients = validated_data.pop('ingredients')
-        except KeyError:
-            raise ValidationError({'ошибка': 'Поде Ингредиенты '
-                                   'не заполнено'})
-        try:
-            tags = validated_data.pop('tags')
-        except KeyError:
-            raise ValidationError({'ошибка': 'Поле Тэг '
-                                   'не заполнено'})
-        try:
-            validated_data.pop('image')
-        except KeyError:
-            raise ValidationError({'ошибка': 'Поле Картинка '
-                                   'не заполнено'})
+        # try:
+        #     ingredients = validated_data.pop('ingredients')
+        # except KeyError:
+        #     raise ValidationError({'ошибка': 'Поде Ингредиенты '
+        #                            'не заполнено'})
+        # try:
+        #     tags = validated_data.pop('tags')
+        # except KeyError:
+        #     raise ValidationError({'ошибка': 'Поле Тэг '
+        #                            'не заполнено'})
+        # try:
+        #     validated_data.pop('image')
+        # except KeyError:
+        #     raise ValidationError({'ошибка': 'Поле Картинка '
+        #                            'не заполнено'})
+        ingredients = validated_data.pop('ingredients')
+        tags = validated_data.pop('tags')
         instance = super().update(instance, validated_data)
         instance.ingredients.clear()
         instance.tags.clear()
         instance.tags.set(tags)
-        recipe_ingredients = []
-        for ingredient_data in ingredients:
-            ingredient = Ingredient.objects.get(id=ingredient_data['id'])
-            amount = ingredient_data['amount']
-            recipe_ingredient = IngredientsOfRecipe(
-                ingredient=ingredient,
-                recipe=instance,
-                amount=amount
-            )
-            recipe_ingredients.append(recipe_ingredient)
-        IngredientsOfRecipe.objects.bulk_create(recipe_ingredients)
+        self.ingredients_amounts(ingredients, instance)
         instance.save()
         return instance
 
