@@ -16,9 +16,9 @@ from .filters import ChangSearchForName, FilterForRecipe
 from .pagination import UserPagination
 from .permission import AuthorOrReadOnly, AuthenticatedOrAnonymous
 from .serializers import (DjoserUserSerializer, IngredientsSerializer,
-                          PostRecipesSerializer, RecipeCartFavoriteSerializer,
-                          RecipesSerializer, SubscribeSerializer,
-                          TagsSerializer)
+                          PostRecipesSerializer, PostSubscribeSerializer,
+                          RecipesSerializer, SubscribeUserSerializer,
+                          TagsSerializer, UniversalRecipeSerializer)
 
 
 class DjoserUserViewSet(UserViewSet):
@@ -41,45 +41,35 @@ class DjoserUserViewSet(UserViewSet):
             detail=False,)
     def subscriptions(self, request):
         """Все подписки пользователя."""
-        page = self.paginate_queryset(Subscriptions.objects.filter(
-            subscriber=request.user))
-        serializer = SubscribeSerializer(page, many=True,
-                                         context={'requests': request})
+
+        page = self.paginate_queryset(User.objects.filter(
+            following__subscriber=request.user))
+        serializer = SubscribeUserSerializer(page, many=True,
+                                             context={'request': request})
         return self.get_paginated_response(serializer.data)
 
     @action(methods=['post', 'delete'],
             permission_classes=(IsAuthenticated,),
-            serializer_class=SubscribeSerializer,
             detail=True)
-    def subscribe(self, request, **kwargs):
+    def subscribe(self, request, id):
         """Подписка."""
-        subscriber = request.user
-        author = get_object_or_404(User, id=self.kwargs.get('id'))
-        if subscriber == author:
-            return Response({'Ошибка': 'Нельзя подписаться на себя'},
-                            status=status.HTTP_400_BAD_REQUEST)
+        get_object_or_404(User, id=id)
         if request.method == 'POST':
-            try:
-                subscribe = Subscriptions.objects.create(
-                    subscriber=subscriber, author=author)
-            except Exception:
-                return Response({'ошибка': 'Нельзя подписаться '
-                                 'второй раз'},
-                                status=status.HTTP_400_BAD_REQUEST)
+            subscriber = request.user
+            data = {'subscriber': subscriber.id, 'author': id}
+            serializer = PostSubscribeSerializer(data=data,
+                                                 context={'request': request})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-            serializer = SubscribeSerializer(subscribe,
-                                             context={'requests': request})
-            return Response(serializer.data, status.HTTP_201_CREATED)
-        if request.method == 'DELETE':
-            if not Subscriptions.objects.filter(subscriber=subscriber,
-                                                author=author).exists():
-                return Response({'Ошибка': 'Нельзя отписаться '
-                                           'не подписавшись'},
-                                status=status.HTTP_400_BAD_REQUEST)
-            Subscriptions.objects.filter(subscriber=subscriber,
-                                         author=author).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response({'Ошибка': 'Неправильный метод запроса'},
+        data = Subscriptions.objects.filter(subscriber_id=request.user.id,
+                                            author_id=id)
+        if data.exists():
+            data.delete()
+            return Response({'Успех': 'Вы отписаны от автора'},
+                            status=status.HTTP_204_NO_CONTENT)
+        return Response({'Ошибка': 'Неверные данные'},
                         status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -131,7 +121,7 @@ class RecipesViewsSet(ModelViewSet):
                     return Response({'ошибка': 'такого рецепта нет'},
                                     status=status.HTTP_400_BAD_REQUEST)
                 Cart.objects.create(user=request.user, recipe=recipe)
-                serializer = RecipeCartFavoriteSerializer(recipe)
+                serializer = UniversalRecipeSerializer(recipe)
                 return Response(serializer.data,
                                 status=status.HTTP_201_CREATED)
             return Response({'ошибка': 'Рецепт уже в корзине'},
@@ -191,7 +181,7 @@ class RecipesViewsSet(ModelViewSet):
                     return Response({'ошибка': 'такого рецепта нет'},
                                     status=status.HTTP_400_BAD_REQUEST)
                 Favorite.objects.create(user=request.user, recipe=recipe)
-                serializer = RecipeCartFavoriteSerializer(recipe)
+                serializer = UniversalRecipeSerializer(recipe)
                 return Response(serializer.data,
                                 status=status.HTTP_201_CREATED)
             return Response({'ошибка': 'Рецепт уже в корзине'},

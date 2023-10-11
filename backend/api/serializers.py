@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
-from rest_framework import serializers
+from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import IntegerField, SerializerMethodField
 from rest_framework.validators import UniqueTogetherValidator
@@ -18,6 +18,7 @@ class DjoserUserSerializer(UserSerializer):
 
     def get_is_subscribed(self, obj):
         """Получение значения подписки пользователя на автора."""
+
         subscriber = self.context.get('request').user
         return (subscriber.is_authenticated
                 and obj.following.filter(subscriber=subscriber).exists())
@@ -158,6 +159,7 @@ class PostRecipesSerializer(serializers.ModelSerializer):
             if ingredient['amount'] <= ZERO:
                 raise ValidationError({'ошибка': 'не верно '
                                                  'указано количество'})
+
         tags = self.initial_data.get('tags')
         tags_list = []
         if not tags:
@@ -166,13 +168,16 @@ class PostRecipesSerializer(serializers.ModelSerializer):
             if tag in tags_list:
                 raise ValidationError({'ошибка': 'Тэг не должен повторяться'})
             tags_list.append(tag)
+
         image = self.initial_data.get('image')
         if not image:
             raise ValidationError({'ошибка': 'Поле картинка не заполнено'})
+
         cooking_time = self.initial_data.get('cooking_time')
         if not cooking_time or cooking_time <= ZERO:
             raise ValidationError({'ошибка': 'Поле время '
                                    'заполнено не корректно'})
+
         return attrs
 
     def ingredients_amounts(self, ingredients, recipe):
@@ -199,22 +204,6 @@ class PostRecipesSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         """Обновление пецепта."""
-        print(validated_data)
-        # try:
-        #     ingredients = validated_data.pop('ingredients')
-        # except KeyError:
-        #     raise ValidationError({'ошибка': 'Поде Ингредиенты '
-        #                            'не заполнено'})
-        # try:
-        #     tags = validated_data.pop('tags')
-        # except KeyError:
-        #     raise ValidationError({'ошибка': 'Поле Тэг '
-        #                            'не заполнено'})
-        # try:
-        #     validated_data.pop('image')
-        # except KeyError:
-        #     raise ValidationError({'ошибка': 'Поле Картинка '
-        #                            'не заполнено'})
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         instance = super().update(instance, validated_data)
@@ -233,7 +222,7 @@ class PostRecipesSerializer(serializers.ModelSerializer):
                                  context=context).data
 
 
-class RecipeCartFavoriteSerializer(serializers.ModelSerializer):
+class UniversalRecipeSerializer(serializers.ModelSerializer):
     """Сериализатор добавления рецепта в корзину."""
 
     class Meta:
@@ -241,50 +230,59 @@ class RecipeCartFavoriteSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'image', 'cooking_time')
 
 
-class SubscribeSerializer(serializers.ModelSerializer):
-    """Сериализатор подписок."""
+class SubscribeUserSerializer(DjoserUserSerializer):
+    """ Сериализатор подписок."""
 
-    id = serializers.IntegerField(source='author.id', read_only=True)
-    username = serializers.StringRelatedField(source='author.username')
-    email = serializers.StringRelatedField(source='author.email')
-    first_name = serializers.StringRelatedField(source='author.first_name')
-    last_name = serializers.StringRelatedField(source='author.last_name')
-    is_subscribed = SerializerMethodField(read_only=True)
     recipes = SerializerMethodField()
     recipes_count = SerializerMethodField()
 
-    class Meta:
-        model = Subscriptions
-        fields = ('id', 'username', 'email', 'first_name', 'last_name',
-                  'is_subscribed', 'recipes', 'recipes_count')
-        validators = [UniqueTogetherValidator(
-            queryset=Subscriptions.objects.all(),
-            fields=['author', 'subscriber'])]
-        read_only_fields = ('author',)
-
-    def get_is_subscribed(self, obj):
-        """Проверка, подписан ли пользователь на автора."""
-        subscriber = self.context['requests'].user
-        author = obj.author
-        if subscriber.is_anonymous:
-            return False
-        return Subscriptions.objects.filter(author=author,
-                                            subscriber=subscriber).exists()
+    class Meta(DjoserUserSerializer.Meta):
+        fields = ('username', 'email', 'first_name',
+                  'last_name', 'is_subscribed', 'id',
+                  'recipes', 'recipes_count')
+        read_only_fields = ('email', 'username', 'first_name', 'last_name')
 
     def get_recipes(self, obj):
         """Получение рецептов автора."""
-        recipes = obj.author.recipes.all()
-        request = self.context.get('requests')
+        recipes = obj.recipes.all()
+        request = self.context.get('request')
         recipes_limit = request.GET.get('recipes_limit')
         if recipes_limit:
-            recipes = recipes[:int(recipes_limit)]
-            serializer = RecipeCartFavoriteSerializer(recipes, many=True,
-                                                      read_only=True)
-            return serializer.data
-        serializer = RecipeCartFavoriteSerializer(recipes, many=True,
-                                                  read_only=True)
+            try:
+                recipes = recipes[:int(recipes_limit)]
+            except Exception:
+                pass
+        serializer = UniversalRecipeSerializer(recipes, many=True,
+                                               read_only=True)
         return serializer.data
 
     def get_recipes_count(self, obj):
         """Количество рецептов автора."""
-        return obj.author.recipes.count()
+        return obj.recipes.count()
+
+
+class PostSubscribeSerializer(serializers.ModelSerializer):
+    """ Сериализатор создания подписки."""
+    class Meta:
+        model = Subscriptions
+        fields = ('author', 'subscriber')
+
+    def validate(self, data):
+        author = data['author']
+        subscriber = data['subscriber']
+        if Subscriptions.objects.filter(author=author,
+                                        subscriber=subscriber).exists():
+            raise ValidationError(
+                detail='Нельзя подписаться второй раз',
+                code=status.HTTP_400_BAD_REQUEST,
+            )
+        if subscriber == author:
+            raise ValidationError(
+                detail='Нельзя подписаться на себя',
+                code=status.HTTP_400_BAD_REQUEST,
+            )
+        return data
+
+    def to_representation(self, instance):
+        return SubscribeUserSerializer(
+            instance.author, context=self.context).data
