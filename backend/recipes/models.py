@@ -1,9 +1,10 @@
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
+from colorfield.fields import ColorField
+from django.db.models import Q, F
 
-from constants import MAX_LENGHT_NAME, MAX_LENGHT_EMAIL, MAX_LENGHT_COLOR, \
-    MAX_LENGHT_TEXT
+from constants import MAX_LENGHT_NAME, MAX_LENGHT_COLOR, MAX_LENGHT_TEXT
 from .validator import validator_more_one
 
 UsernameValidator = UnicodeUsernameValidator()
@@ -47,7 +48,9 @@ class Subscriptions(models.Model):
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
         constraints = [models.UniqueConstraint(fields=['author', 'subscriber'],
-                                               name='author_subscriber')]
+                                               name='author_subscriber'),
+                       models.CheckConstraint(check=~Q(user=F('author')),
+                                              name='no_self_follow')]
 
     def __str__(self):
         return f'Author({self.author}) - Subscriber({self.subscriber})'
@@ -63,10 +66,14 @@ class Tags(models.Model):
         null=False,
         max_length=MAX_LENGHT_NAME
     )
-    color = models.CharField(
+    color = ColorField(
         verbose_name='Цвет',
         blank=False,
         null=False,
+        db_index=True,
+        unique=True,
+        format='hex',
+        default='#999999',
         max_length=MAX_LENGHT_COLOR,
     )
     slug = models.SlugField(
@@ -102,6 +109,9 @@ class Ingredient(models.Model):
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
         ordering = ('name',)
+        constraints = [models.UniqueConstraint(fields=['name',
+                                                       'measurement_unit'],
+                                               name='name_measurement_unit')]
 
     def __str__(self):
         return f'{self.name} {self.measurement_unit}'

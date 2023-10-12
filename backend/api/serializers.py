@@ -7,8 +7,8 @@ from rest_framework.fields import IntegerField, SerializerMethodField
 from rest_framework.validators import UniqueTogetherValidator
 
 from constants import ZERO
-from recipes.models import (Ingredient, IngredientsOfRecipe, Recipes,
-                            Subscriptions, Tags, User)
+from recipes.models import (Cart, Favorite, Ingredient, IngredientsOfRecipe,
+                            Recipes, Subscriptions, Tags, User)
 
 
 class DjoserUserSerializer(UserSerializer):
@@ -286,3 +286,33 @@ class PostSubscribeSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         return SubscribeUserSerializer(
             instance.author, context=self.context).data
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    """  Сериализатор избранных рецептов """
+
+    class Meta:
+        model = Favorite
+        fields = ('user', 'recipe',)
+
+    def validate(self, data):
+        print(2)
+        if self.Meta.model.objects.filter(user=data['user'],
+                                          recipe=data['recipe']).exists():
+            raise serializers.ValidationError(
+                'Нельзядважды добавить рецепт.')
+        return data
+
+    def to_representation(self, instance):
+        print(3)
+        return UniversalRecipeSerializer(
+            instance.recipe,
+            context=self.context).data
+
+
+class CartSerializer(FavoriteSerializer):
+    """Сериализатор для карзины """
+
+    class Meta:
+        model = Cart
+        fields = ('user', 'recipe',)
