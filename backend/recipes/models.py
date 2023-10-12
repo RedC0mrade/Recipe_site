@@ -1,10 +1,11 @@
+from colorfield.fields import ColorField
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
-from colorfield.fields import ColorField
-from django.db.models import Q, F
+from django.db.models import F, Q
 
-from constants import MAX_LENGHT_NAME, MAX_LENGHT_COLOR, MAX_LENGHT_TEXT
+from constants import MAX_LENGHT_COLOR, MAX_LENGHT_NAME, MAX_LENGHT_TEXT
+
 from .validator import validator_more_one
 
 UsernameValidator = UnicodeUsernameValidator()
@@ -49,8 +50,8 @@ class Subscriptions(models.Model):
         verbose_name_plural = 'Подписки'
         constraints = [models.UniqueConstraint(fields=['author', 'subscriber'],
                                                name='author_subscriber'),
-                       models.CheckConstraint(check=~Q(user=F('author')),
-                                              name='no_self_follow')]
+                       models.CheckConstraint(check=~Q(subscriber=F('author')),
+                                              name='no_self_subscription')]
 
     def __str__(self):
         return f'Author({self.author}) - Subscriber({self.subscriber})'

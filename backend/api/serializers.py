@@ -18,7 +18,6 @@ class DjoserUserSerializer(UserSerializer):
 
     def get_is_subscribed(self, obj):
         """Получение значения подписки пользователя на автора."""
-
         subscriber = self.context.get('request').user
         return (subscriber.is_authenticated
                 and obj.following.filter(subscriber=subscriber).exists())
@@ -64,6 +63,7 @@ class IngredientsSerializer(serializers.ModelSerializer):
 
 class IngredientsOfRecipeSerializer(serializers.ModelSerializer):
     """Сериализатор для ингредиентов в рецепте."""
+
     id = serializers.ReadOnlyField(source='ingredient.id')
     name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
@@ -231,7 +231,7 @@ class UniversalRecipeSerializer(serializers.ModelSerializer):
 
 
 class SubscribeUserSerializer(DjoserUserSerializer):
-    """ Сериализатор подписок."""
+    """Сериализатор подписок."""
 
     recipes = SerializerMethodField()
     recipes_count = SerializerMethodField()
@@ -262,7 +262,8 @@ class SubscribeUserSerializer(DjoserUserSerializer):
 
 
 class PostSubscribeSerializer(serializers.ModelSerializer):
-    """ Сериализатор создания подписки."""
+    """Сериализатор создания подписки."""
+
     class Meta:
         model = Subscriptions
         fields = ('author', 'subscriber')
@@ -289,7 +290,7 @@ class PostSubscribeSerializer(serializers.ModelSerializer):
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
-    """  Сериализатор избранных рецептов """
+    """Сериализатор избранных рецептов."""
 
     class Meta:
         model = Favorite
@@ -311,7 +312,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
 
 class CartSerializer(FavoriteSerializer):
-    """Сериализатор для карзины """
+    """Сериализатор для карзины."""
 
     class Meta:
         model = Cart

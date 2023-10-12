@@ -6,17 +6,18 @@ from djoser.views import UserViewSet
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+
 from recipes.models import (Cart, Favorite, Ingredient, IngredientsOfRecipe,
-                            Recipes, Subscriptions, Tags, User,)
+                            Recipes, Subscriptions, Tags, User)
 
 from .filters import ChangSearchForName, FilterForRecipe
 from .pagination import UserPagination
-from .permission import AuthorOrReadOnly, AuthenticatedOrAnonymous
-from .serializers import (CartSerializer, FavoriteSerializer,
-                          DjoserUserSerializer, IngredientsSerializer,
+from .permission import AuthenticatedOrAnonymous, AuthorOrReadOnly
+from .serializers import (CartSerializer, DjoserUserSerializer,
+                          FavoriteSerializer, IngredientsSerializer,
                           PostRecipesSerializer, PostSubscribeSerializer,
                           RecipesSerializer, SubscribeUserSerializer,
                           TagsSerializer)
@@ -42,7 +43,6 @@ class DjoserUserViewSet(UserViewSet):
             detail=False,)
     def subscriptions(self, request):
         """Все подписки пользователя."""
-
         page = self.paginate_queryset(User.objects.filter(
             following__subscriber=request.user))
         serializer = SubscribeUserSerializer(page, many=True,
