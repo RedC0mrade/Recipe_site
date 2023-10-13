@@ -12,10 +12,9 @@ from rest_framework.viewsets import ModelViewSet
 
 from recipes.models import (Cart, Favorite, Ingredient, IngredientsOfRecipe,
                             Recipes, Subscriptions, Tags, User)
-
 from .filters import ChangSearchForName, FilterForRecipe
 from .pagination import UserPagination
-from .permission import AuthenticatedOrAnonymous, AuthorOrReadOnly
+from .permission import AuthorOrReadOnly
 from .serializers import (CartSerializer, DjoserUserSerializer,
                           FavoriteSerializer, IngredientsSerializer,
                           PostRecipesSerializer, PostSubscribeSerializer,
@@ -33,8 +32,8 @@ class DjoserUserViewSet(UserViewSet):
 
     def get_permissions(self):
         if self.action == 'me':
-            return [AuthenticatedOrAnonymous(), ]
-        elif self.action == 'create':
+            return [IsAuthenticated(), ]
+        if self.action == 'create':
             return [AllowAny(), ]
         return [AuthorOrReadOnly(), ]
 

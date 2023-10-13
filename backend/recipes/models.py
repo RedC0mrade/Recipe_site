@@ -4,8 +4,8 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 from django.db.models import F, Q
 
+from api.validator import cooking_time_validator
 from constants import MAX_LENGHT_COLOR, MAX_LENGHT_NAME, MAX_LENGHT_TEXT
-
 from .validator import validator_more_one
 
 UsernameValidator = UnicodeUsernameValidator()
@@ -17,7 +17,29 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
     USERNAME_FIELD = 'email'
 
-    email = models.EmailField(unique=True)
+    username = models.CharField(
+        verbose_name='username',
+        max_length=MAX_LENGHT_NAME,
+        unique=True,
+        validators=(UsernameValidator, )
+    )
+    first_name = models.CharField(
+        verbose_name='Имя',
+        max_length=MAX_LENGHT_NAME,
+    )
+    last_name = models.CharField(
+        verbose_name='Фамиоия',
+        max_length=MAX_LENGHT_NAME,
+    )
+    email = models.EmailField(
+        verbose_name='email',
+        unique=True,
+        max_length=MAX_LENGHT_NAME,
+        )
+    password = models.CharField(
+        verbose_name='Пароль',
+        max_length=MAX_LENGHT_NAME,
+    )
 
     class Meta:
         verbose_name = 'Пользователь'
@@ -150,6 +172,7 @@ class Recipes(models.Model):
     )
     cooking_time = models.IntegerField(
         verbose_name='Время приготовления',
+        validators=(cooking_time_validator, )
     )
     ingredients = models.ManyToManyField(
         Ingredient,

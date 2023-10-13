@@ -6,7 +6,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.fields import IntegerField, SerializerMethodField
 from rest_framework.validators import UniqueTogetherValidator
 
-from constants import ZERO
+from constants import LESS_THEN_MINIMUM_INGREDIENTS
 from recipes.models import (Cart, Favorite, Ingredient, IngredientsOfRecipe,
                             Recipes, Subscriptions, Tags, User)
 
@@ -97,16 +97,13 @@ class RecipesSerializer(serializers.ModelSerializer):
     def get_is_favorited(self, obj):
         """Получаем значение, добавлен ли рецепт избранное."""
         user = self.context.get('request').user
-        if user.is_anonymous:
-            return False
-        return user.favorites.filter(recipe=obj).exists()
+        return user.is_authenticated and user.favorites.filter(
+            recipe=obj).exists()
 
     def get_is_in_shopping_cart(self, obj):
         """Получаем значение, добавлен ли рецепт в корзину."""
         user = self.context.get('request').user
-        if user.is_anonymous:
-            return False
-        return user.cart.filter(recipe=obj).exists()
+        return user.is_authenticated and user.cart.filter(recipe=obj).exists()
 
     class Meta:
         model = Recipes
@@ -156,7 +153,7 @@ class PostRecipesSerializer(serializers.ModelSerializer):
                 raise ValidationError({'ошибка': 'Ингредиенты не должны '
                                                  'дублироваться'})
             ingredients_list.append(value)
-            if ingredient['amount'] <= ZERO:
+            if ingredient['amount'] <= LESS_THEN_MINIMUM_INGREDIENTS:
                 raise ValidationError({'ошибка': 'не верно '
                                                  'указано количество'})
 
@@ -172,11 +169,6 @@ class PostRecipesSerializer(serializers.ModelSerializer):
         image = self.initial_data.get('image')
         if not image:
             raise ValidationError({'ошибка': 'Поле картинка не заполнено'})
-
-        cooking_time = self.initial_data.get('cooking_time')
-        if not cooking_time or cooking_time <= ZERO:
-            raise ValidationError({'ошибка': 'Поле время '
-                                   'заполнено не корректно'})
 
         return attrs
 
@@ -271,8 +263,7 @@ class PostSubscribeSerializer(serializers.ModelSerializer):
     def validate(self, data):
         author = data['author']
         subscriber = data['subscriber']
-        if Subscriptions.objects.filter(author=author,
-                                        subscriber=subscriber).exists():
+        if subscriber.follower.filter(author=author).exists():
             raise ValidationError(
                 detail='Нельзя подписаться второй раз',
                 code=status.HTTP_400_BAD_REQUEST,
@@ -297,7 +288,6 @@ class FavoriteSerializer(serializers.ModelSerializer):
         fields = ('user', 'recipe',)
 
     def validate(self, data):
-        print(2)
         if self.Meta.model.objects.filter(user=data['user'],
                                           recipe=data['recipe']).exists():
             raise serializers.ValidationError(
@@ -305,7 +295,6 @@ class FavoriteSerializer(serializers.ModelSerializer):
         return data
 
     def to_representation(self, instance):
-        print(3)
         return UniversalRecipeSerializer(
             instance.recipe,
             context=self.context).data
