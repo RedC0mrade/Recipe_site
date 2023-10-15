@@ -6,6 +6,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.fields import IntegerField, SerializerMethodField
 from rest_framework.validators import UniqueTogetherValidator
 
+from constants import LESS_THEN_MINIMUM_INGREDIENTS
 from recipes.models import (Cart, Favorite, Ingredient, IngredientsOfRecipe,
                             Recipes, Subscriptions, Tags, User)
 
@@ -149,7 +150,7 @@ class PostRecipesSerializer(serializers.ModelSerializer):
         for ingredient in ingredients:
 
             value = get_object_or_404(Ingredient, id=ingredient['id'])
-            if ingredient['amount'] < 0:
+            if int(ingredient['amount']) < LESS_THEN_MINIMUM_INGREDIENTS:
                 raise ValidationError({'ошибка': 'не верно '
                                                  'указано количество'})
             if value in ingredients_list:
