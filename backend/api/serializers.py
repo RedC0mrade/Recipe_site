@@ -153,9 +153,6 @@ class PostRecipesSerializer(serializers.ModelSerializer):
                 raise ValidationError({'ошибка': 'Ингредиенты не должны '
                                                  'дублироваться'})
             ingredients_list.append(value)
-            if ingredient['amount'] <= LESS_THEN_MINIMUM_INGREDIENTS:
-                raise ValidationError({'ошибка': 'не верно '
-                                                 'указано количество'})
 
         tags = self.initial_data.get('tags')
         tags_list = []
