@@ -1,9 +1,11 @@
+from colorfield.fields import ColorField
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
+from django.db.models import F, Q
 
-from constants import MAX_LENGHT_NAME, MAX_LENGHT_EMAIL, MAX_LENGHT_COLOR, \
-    MAX_LENGHT_TEXT
+from api.validator import cooking_time_validator
+from constants import MAX_LENGHT_COLOR, MAX_LENGHT_NAME, MAX_LENGHT_TEXT
 from .validator import validator_more_one
 
 UsernameValidator = UnicodeUsernameValidator()
@@ -15,7 +17,29 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
     USERNAME_FIELD = 'email'
 
-    email = models.EmailField(unique=True)
+    username = models.CharField(
+        verbose_name='username',
+        max_length=MAX_LENGHT_NAME,
+        unique=True,
+        validators=(UsernameValidator, )
+    )
+    first_name = models.CharField(
+        verbose_name='Имя',
+        max_length=MAX_LENGHT_NAME,
+    )
+    last_name = models.CharField(
+        verbose_name='Фамиоия',
+        max_length=MAX_LENGHT_NAME,
+    )
+    email = models.EmailField(
+        verbose_name='email',
+        unique=True,
+        max_length=MAX_LENGHT_NAME,
+        )
+    password = models.CharField(
+        verbose_name='Пароль',
+        max_length=MAX_LENGHT_NAME,
+    )
 
     class Meta:
         verbose_name = 'Пользователь'
@@ -47,7 +71,9 @@ class Subscriptions(models.Model):
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
         constraints = [models.UniqueConstraint(fields=['author', 'subscriber'],
-                                               name='author_subscriber')]
+                                               name='author_subscriber'),
+                       models.CheckConstraint(check=~Q(subscriber=F('author')),
+                                              name='no_self_subscription')]
 
     def __str__(self):
         return f'Author({self.author}) - Subscriber({self.subscriber})'
@@ -63,10 +89,14 @@ class Tags(models.Model):
         null=False,
         max_length=MAX_LENGHT_NAME
     )
-    color = models.CharField(
+    color = ColorField(
         verbose_name='Цвет',
         blank=False,
         null=False,
+        db_index=True,
+        unique=True,
+        format='hex',
+        default='#999999',
         max_length=MAX_LENGHT_COLOR,
     )
     slug = models.SlugField(
@@ -102,6 +132,9 @@ class Ingredient(models.Model):
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
         ordering = ('name',)
+        constraints = [models.UniqueConstraint(fields=['name',
+                                                       'measurement_unit'],
+                                               name='name_measurement_unit')]
 
     def __str__(self):
         return f'{self.name} {self.measurement_unit}'
@@ -139,6 +172,7 @@ class Recipes(models.Model):
     )
     cooking_time = models.IntegerField(
         verbose_name='Время приготовления',
+        validators=(cooking_time_validator, )
     )
     ingredients = models.ManyToManyField(
         Ingredient,

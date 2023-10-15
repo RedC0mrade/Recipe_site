@@ -6,9 +6,9 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.fields import IntegerField, SerializerMethodField
 from rest_framework.validators import UniqueTogetherValidator
 
-from constants import ZERO
-from recipes.models import (Ingredient, IngredientsOfRecipe, Recipes,
-                            Subscriptions, Tags, User)
+from constants import LESS_THEN_MINIMUM_INGREDIENTS
+from recipes.models import (Cart, Favorite, Ingredient, IngredientsOfRecipe,
+                            Recipes, Subscriptions, Tags, User)
 
 
 class DjoserUserSerializer(UserSerializer):
@@ -18,7 +18,6 @@ class DjoserUserSerializer(UserSerializer):
 
     def get_is_subscribed(self, obj):
         """Получение значения подписки пользователя на автора."""
-
         subscriber = self.context.get('request').user
         return (subscriber.is_authenticated
                 and obj.following.filter(subscriber=subscriber).exists())
@@ -64,6 +63,7 @@ class IngredientsSerializer(serializers.ModelSerializer):
 
 class IngredientsOfRecipeSerializer(serializers.ModelSerializer):
     """Сериализатор для ингредиентов в рецепте."""
+
     id = serializers.ReadOnlyField(source='ingredient.id')
     name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
@@ -97,16 +97,13 @@ class RecipesSerializer(serializers.ModelSerializer):
     def get_is_favorited(self, obj):
         """Получаем значение, добавлен ли рецепт избранное."""
         user = self.context.get('request').user
-        if user.is_anonymous:
-            return False
-        return user.favorites.filter(recipe=obj).exists()
+        return user.is_authenticated and user.favorites.filter(
+            recipe=obj).exists()
 
     def get_is_in_shopping_cart(self, obj):
         """Получаем значение, добавлен ли рецепт в корзину."""
         user = self.context.get('request').user
-        if user.is_anonymous:
-            return False
-        return user.cart.filter(recipe=obj).exists()
+        return user.is_authenticated and user.cart.filter(recipe=obj).exists()
 
     class Meta:
         model = Recipes
@@ -156,7 +153,7 @@ class PostRecipesSerializer(serializers.ModelSerializer):
                 raise ValidationError({'ошибка': 'Ингредиенты не должны '
                                                  'дублироваться'})
             ingredients_list.append(value)
-            if ingredient['amount'] <= ZERO:
+            if ingredient['amount'] <= LESS_THEN_MINIMUM_INGREDIENTS:
                 raise ValidationError({'ошибка': 'не верно '
                                                  'указано количество'})
 
@@ -172,11 +169,6 @@ class PostRecipesSerializer(serializers.ModelSerializer):
         image = self.initial_data.get('image')
         if not image:
             raise ValidationError({'ошибка': 'Поле картинка не заполнено'})
-
-        cooking_time = self.initial_data.get('cooking_time')
-        if not cooking_time or cooking_time <= ZERO:
-            raise ValidationError({'ошибка': 'Поле время '
-                                   'заполнено не корректно'})
 
         return attrs
 
@@ -231,7 +223,7 @@ class UniversalRecipeSerializer(serializers.ModelSerializer):
 
 
 class SubscribeUserSerializer(DjoserUserSerializer):
-    """ Сериализатор подписок."""
+    """Сериализатор подписок."""
 
     recipes = SerializerMethodField()
     recipes_count = SerializerMethodField()
@@ -262,7 +254,8 @@ class SubscribeUserSerializer(DjoserUserSerializer):
 
 
 class PostSubscribeSerializer(serializers.ModelSerializer):
-    """ Сериализатор создания подписки."""
+    """Сериализатор создания подписки."""
+
     class Meta:
         model = Subscriptions
         fields = ('author', 'subscriber')
@@ -270,8 +263,7 @@ class PostSubscribeSerializer(serializers.ModelSerializer):
     def validate(self, data):
         author = data['author']
         subscriber = data['subscriber']
-        if Subscriptions.objects.filter(author=author,
-                                        subscriber=subscriber).exists():
+        if subscriber.follower.filter(author=author).exists():
             raise ValidationError(
                 detail='Нельзя подписаться второй раз',
                 code=status.HTTP_400_BAD_REQUEST,
@@ -286,3 +278,31 @@ class PostSubscribeSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         return SubscribeUserSerializer(
             instance.author, context=self.context).data
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    """Сериализатор избранных рецептов."""
+
+    class Meta:
+        model = Favorite
+        fields = ('user', 'recipe',)
+
+    def validate(self, data):
+        if self.Meta.model.objects.filter(user=data['user'],
+                                          recipe=data['recipe']).exists():
+            raise serializers.ValidationError(
+                'Нельзядважды добавить рецепт.')
+        return data
+
+    def to_representation(self, instance):
+        return UniversalRecipeSerializer(
+            instance.recipe,
+            context=self.context).data
+
+
+class CartSerializer(FavoriteSerializer):
+    """Сериализатор для карзины."""
+
+    class Meta:
+        model = Cart
+        fields = ('user', 'recipe',)

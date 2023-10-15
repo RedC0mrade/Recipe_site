@@ -16,6 +16,7 @@ coverage==7.2.1
 cryptography==40.0.2
 defusedxml==0.7.1
 Django==3.2.16
+django-colorfield==0.10.1
 django-cors-headers==3.14.0
 django-debug-toolbar==2.2
 django-extensions==3.2.3

@@ -40,5 +40,5 @@ def run():
                                               email='admin@admin.com',
                                               first_name='admin',
                                               last_name='admin',
-                                              password='admin')
+                                              password='Praktikum+123В')
     superuser.save()
