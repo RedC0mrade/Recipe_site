@@ -150,7 +150,7 @@ class PostRecipesSerializer(serializers.ModelSerializer):
         for ingredient in ingredients:
 
             value = get_object_or_404(Ingredient, id=ingredient['id'])
-            if ingredient['amount'] < LESS_THEN_MINIMUM_INGREDIENTS:
+            if ingredient['amount'] < 0:
                 raise ValidationError({'ошибка': 'не верно '
                                                  'указано количество'})
             if value in ingredients_list:
