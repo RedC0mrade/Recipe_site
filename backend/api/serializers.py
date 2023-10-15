@@ -148,14 +148,15 @@ class PostRecipesSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 'ingredients': 'Нужен хоть один ингридиент для рецепта'})
         for ingredient in ingredients:
+
             value = get_object_or_404(Ingredient, id=ingredient['id'])
+            if ingredient['amount'] < LESS_THEN_MINIMUM_INGREDIENTS:
+                raise ValidationError({'ошибка': 'не верно '
+                                                 'указано количество'})
             if value in ingredients_list:
                 raise ValidationError({'ошибка': 'Ингредиенты не должны '
                                                  'дублироваться'})
             ingredients_list.append(value)
-            if ingredient['amount'] < LESS_THEN_MINIMUM_INGREDIENTS:
-                raise ValidationError({'ошибка': 'не верно '
-                                                 'указано количество'})
 
         tags = self.initial_data.get('tags')
         tags_list = []
