@@ -167,10 +167,6 @@ class PostRecipesSerializer(serializers.ModelSerializer):
                 raise ValidationError({'ошибка': 'Тэг не должен повторяться'})
             tags_list.append(tag)
 
-        # image = self.initial_data.get('image')
-        # if not image:
-        #     raise ValidationError({'ошибка': 'Поле картинка не заполнено'})
-
         return attrs
 
     def validate_image(self, image):
