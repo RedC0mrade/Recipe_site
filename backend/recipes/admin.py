@@ -1,7 +1,7 @@
 from django.contrib import admin
 
-from .models import (Cart, Favorite, Ingredient, IngredientsOfRecipe, Recipes,
-                     Subscriptions, Tags, User)
+from .models import (Cart, Favorite, Ingredient, IngredientsOfRecipe, Recipe,
+                     Subscription, Tag, User)
 
 
 @admin.register(Cart)
@@ -52,7 +52,7 @@ class RecipeIngredientAdmin(admin.StackedInline):
     min_num = 1
 
 
-@admin.register(Recipes)
+@admin.register(Recipe)
 class RecipesAdmin(admin.ModelAdmin):
     """Админка рецептов."""
 
@@ -92,7 +92,7 @@ class RecipesAdmin(admin.ModelAdmin):
         return obj.favorites.count()
 
 
-@admin.register(Subscriptions)
+@admin.register(Subscription)
 class SubscriptionsAdmin(admin.ModelAdmin):
     """Админка подписок."""
 
@@ -113,7 +113,7 @@ class SubscriptionsAdmin(admin.ModelAdmin):
         return obj.author.email
 
 
-@admin.register(Tags)
+@admin.register(Tag)
 class TagsAdmin(admin.ModelAdmin):
     """Админка тэгов."""
 

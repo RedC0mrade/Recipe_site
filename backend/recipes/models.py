@@ -50,7 +50,7 @@ class User(AbstractUser):
         return f'{self.username}'
 
 
-class Subscriptions(models.Model):
+class Subscription(models.Model):
     """Подписка."""
 
     author = models.ForeignKey(
@@ -79,7 +79,7 @@ class Subscriptions(models.Model):
         return f'Author({self.author}) - Subscriber({self.subscriber})'
 
 
-class Tags(models.Model):
+class Tag(models.Model):
     """Модель тэга."""
 
     name = models.CharField(
@@ -140,7 +140,7 @@ class Ingredient(models.Model):
         return f'{self.name} {self.measurement_unit}'
 
 
-class Recipes(models.Model):
+class Recipe(models.Model):
     """Рецепт."""
 
     author = models.ForeignKey(
@@ -161,11 +161,11 @@ class Recipes(models.Model):
         max_length=MAX_LENGHT_NAME
     )
     tags = models.ManyToManyField(
-        Tags,
+        Tag,
         verbose_name='Тэг',
         related_name='recipes',
     )
-    text = models.CharField(
+    text = models.TextField(
         verbose_name='Текст рецепта',
         blank=False,
         max_length=MAX_LENGHT_TEXT
@@ -180,11 +180,15 @@ class Recipes(models.Model):
         related_name='recipes',
         through='IngredientsOfRecipe',
     )
+    date = models.DateTimeField(
+        verbose_name='Дата публикации',
+        auto_now_add=True
+    )
 
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
-        ordering = ('name',)
+        ordering = ('-date',)
 
     def __str__(self):
         return f'{self.name}'
@@ -194,7 +198,7 @@ class IngredientsOfRecipe(models.Model):
     """Ингредиенты в рецепте."""
 
     recipe = models.ForeignKey(
-        Recipes,
+        Recipe,
         on_delete=models.CASCADE,
         related_name='ingredients_in_recipe',
     )
@@ -229,7 +233,7 @@ class Favorite(models.Model):
         related_name='favorites'
     )
     recipe = models.ForeignKey(
-        Recipes,
+        Recipe,
         on_delete=models.CASCADE,
         verbose_name='Рецепты избранного пользователя',
         related_name='favorites'
@@ -255,7 +259,7 @@ class Cart(models.Model):
         related_name='cart'
     )
     recipe = models.ForeignKey(
-        Recipes,
+        Recipe,
         on_delete=models.CASCADE,
         verbose_name='Рецепты в корзине',
         related_name='cart'

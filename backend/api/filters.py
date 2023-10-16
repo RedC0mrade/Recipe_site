@@ -1,12 +1,12 @@
 from django_filters.rest_framework import FilterSet, filters
 
-from recipes.models import Ingredient, Recipes, Tags
+from recipes.models import Ingredient, Recipe, Tag
 
 
 class FilterForRecipe(FilterSet):
     """Фильтер-класс для рецептов."""
 
-    tags = filters.ModelMultipleChoiceFilter(queryset=Tags.objects.all(),
+    tags = filters.ModelMultipleChoiceFilter(queryset=Tag.objects.all(),
                                              field_name='tags__slug',
                                              to_field_name='slug')
 
@@ -27,7 +27,7 @@ class FilterForRecipe(FilterSet):
         return queryset
 
     class Meta:
-        model = Recipes
+        model = Recipe
         fields = ('author', 'tags')
 
 

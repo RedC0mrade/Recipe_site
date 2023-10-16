@@ -1,7 +1,7 @@
 import csv
 import os
 
-from recipes.models import Ingredient, Tags, User
+from recipes.models import Ingredient, Tag, User
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 csv_file_path = os.path.join(current_dir, 'ingredients.csv')
@@ -29,12 +29,12 @@ def run():
 
     tags_data = []
     for i in range(3):
-        obj = Tags()
+        obj = Tag()
         obj.name = TAGS_NAMES[i]
         obj.slug = TAGS_SLUG[i]
         obj.color = TAGS_COLORS[i]
         tags_data.append(obj)
-    Tags.objects.bulk_create(tags_data)
+    Tag.objects.bulk_create(tags_data)
 
     superuser = User.objects.create_superuser(username='admin',
                                               email='admin@admin.com',

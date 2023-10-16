@@ -8,7 +8,7 @@ from rest_framework.validators import UniqueTogetherValidator
 
 from constants import LESS_THEN_MINIMUM_INGREDIENTS
 from recipes.models import (Cart, Favorite, Ingredient, IngredientsOfRecipe,
-                            Recipes, Subscriptions, Tags, User)
+                            Recipe, Subscription, Tag, User)
 
 
 class DjoserUserSerializer(UserSerializer):
@@ -49,7 +49,7 @@ class TagsSerializer(serializers.ModelSerializer):
     """Сериализатор тэгов."""
 
     class Meta:
-        model = Tags
+        model = Tag
         fields = ('id', 'name', 'color', 'slug')
 
 
@@ -106,7 +106,7 @@ class RecipesSerializer(serializers.ModelSerializer):
         return user.is_authenticated and user.cart.filter(recipe=obj).exists()
 
     class Meta:
-        model = Recipes
+        model = Recipe
         fields = ('id', 'tags', 'author', 'ingredients',
                   'is_favorited', 'is_in_shopping_cart', 'name',
                   'image', 'text', 'cooking_time')
@@ -130,13 +130,13 @@ class PostRecipesSerializer(serializers.ModelSerializer):
     """Сериализатор рецптов запроса POST."""
 
     tags = serializers.PrimaryKeyRelatedField(
-        queryset=Tags.objects.all(), many=True)
+        queryset=Tag.objects.all(), many=True)
     image = Base64ImageField()
     author = DjoserUserSerializer(read_only=True)
     ingredients = PostIngredientsOfRecipeSerializer(many=True)
 
     class Meta:
-        model = Recipes
+        model = Recipe
         fields = ('id', 'author', 'ingredients', 'tags', 'image',
                   'name', 'text', 'cooking_time')
 
@@ -167,11 +167,16 @@ class PostRecipesSerializer(serializers.ModelSerializer):
                 raise ValidationError({'ошибка': 'Тэг не должен повторяться'})
             tags_list.append(tag)
 
-        image = self.initial_data.get('image')
-        if not image:
-            raise ValidationError({'ошибка': 'Поле картинка не заполнено'})
+        # image = self.initial_data.get('image')
+        # if not image:
+        #     raise ValidationError({'ошибка': 'Поле картинка не заполнено'})
 
         return attrs
+
+    def validate_image(self, image):
+        if not image:
+            raise serializers.ValidationError('Изображение обязательно')
+        return image
 
     def ingredients_amounts(self, ingredients, recipe):
         recipe_ingredients = []
@@ -189,7 +194,7 @@ class PostRecipesSerializer(serializers.ModelSerializer):
         """Создание многострадального рецепта."""
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
-        recipe = Recipes.objects.create(**validated_data)
+        recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
         self.ingredients_amounts(ingredients, recipe)
 
@@ -219,7 +224,7 @@ class UniversalRecipeSerializer(serializers.ModelSerializer):
     """Сериализатор добавления рецепта в корзину."""
 
     class Meta:
-        model = Recipes
+        model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
 
 
@@ -258,7 +263,7 @@ class PostSubscribeSerializer(serializers.ModelSerializer):
     """Сериализатор создания подписки."""
 
     class Meta:
-        model = Subscriptions
+        model = Subscription
         fields = ('author', 'subscriber')
 
     def validate(self, data):

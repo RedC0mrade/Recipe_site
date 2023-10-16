@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from recipes.models import (Cart, Favorite, Ingredient, IngredientsOfRecipe,
-                            Recipes, Subscriptions, Tags, User)
+                            Recipe, Subscription, Tag, User)
 from .filters import ChangSearchForName, FilterForRecipe
 from .pagination import UserPagination
 from .permission import AuthorOrReadOnly
@@ -63,8 +63,8 @@ class DjoserUserViewSet(UserViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        data = Subscriptions.objects.filter(subscriber_id=request.user.id,
-                                            author_id=id)
+        data = Subscription.objects.filter(subscriber_id=request.user.id,
+                                           author_id=id)
         if data.exists():
             data.delete()
             return Response({'Успех': 'Вы отписаны от автора'},
@@ -76,7 +76,7 @@ class DjoserUserViewSet(UserViewSet):
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
     """Представление тэгов."""
 
-    queryset = Tags.objects.all()
+    queryset = Tag.objects.all()
     serializer_class = TagsSerializer
     pagination_class = None
 
@@ -84,7 +84,7 @@ class TagsViewSet(viewsets.ReadOnlyModelViewSet):
 class RecipesViewsSet(ModelViewSet):
     """Представление рецептов."""
 
-    queryset = Recipes.objects.all()
+    queryset = Recipe.objects.all()
     permission_classes = (AuthorOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = FilterForRecipe
@@ -127,7 +127,7 @@ class RecipesViewsSet(ModelViewSet):
         if data.exists():
             data.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        get_object_or_404(Recipes, id=pk)
+        get_object_or_404(Recipe, id=pk)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(methods=['post', 'delete'],
@@ -143,7 +143,7 @@ class RecipesViewsSet(ModelViewSet):
         if data.exists():
             data.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        get_object_or_404(Recipes, id=pk)
+        get_object_or_404(Recipe, id=pk)
         return Response({'ошибка': 'Такого рецепта нет'},
                         status=status.HTTP_400_BAD_REQUEST)
 
