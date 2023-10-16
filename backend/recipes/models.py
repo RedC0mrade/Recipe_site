@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 from django.db.models import F, Q
+from rest_framework.exceptions import ValidationError
 
 from api.validator import cooking_time_validator
 from constants import MAX_LENGHT_COLOR, MAX_LENGHT_NAME, MAX_LENGHT_TEXT
@@ -66,6 +67,11 @@ class Subscription(models.Model):
         related_name='follower',
 
     )
+
+    def save(self, *args, **kwargs):
+        if self.author == self.subscriber:
+            raise ValidationError("Нельзя подписаться на самого себя.")
+        super(Subscription, self).save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'Подписка'
