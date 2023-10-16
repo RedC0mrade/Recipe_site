@@ -1,9 +1,9 @@
 from colorfield.fields import ColorField
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import F, Q
-from rest_framework.exceptions import ValidationError
 
 from api.validator import cooking_time_validator
 from constants import MAX_LENGHT_COLOR, MAX_LENGHT_NAME, MAX_LENGHT_TEXT
@@ -68,10 +68,10 @@ class Subscription(models.Model):
 
     )
 
-    def save(self, *args, **kwargs):
-        if self.author == self.subscriber:
-            raise ValidationError("Нельзя подписаться на самого себя.")
-        super(Subscription, self).save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     if self.author == self.subscriber:
+    #         return ValidationError("Нельзя подписаться на самого себя.")
+    #     super(Subscription, self).save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'Подписка'
@@ -80,6 +80,11 @@ class Subscription(models.Model):
                                                name='author_subscriber'),
                        models.CheckConstraint(check=~Q(subscriber=F('author')),
                                               name='no_self_subscription')]
+
+    def clean(self):
+        if self.subscriber == self.author:
+            raise ValidationError("Нельзя подписаться на самого себя.")
+        return super().clean()
 
     def __str__(self):
         return f'Author({self.author}) - Subscriber({self.subscriber})'

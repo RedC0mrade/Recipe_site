@@ -263,8 +263,8 @@ class PostSubscribeSerializer(serializers.ModelSerializer):
         fields = ('author', 'subscriber')
 
     def validate(self, data):
-        author = data['author']
-        subscriber = data['subscriber']
+        author = data.get('author')
+        subscriber = data.get('subscriber')
         if subscriber.follower.filter(author=author).exists():
             raise ValidationError(
                 detail='Нельзя подписаться второй раз',
