@@ -171,7 +171,7 @@ class PostRecipesSerializer(serializers.ModelSerializer):
 
     def validate_image(self, image):
         if not image:
-            raise serializers.ValidationError('Изображение обязательно')
+            raise serializers.ValidationError({'ошибка': 'Нет изображения'})
         return image
 
     def ingredients_amounts(self, ingredients, recipe):
