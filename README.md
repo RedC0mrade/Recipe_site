@@ -1,4 +1,3 @@
-![Состояние проекта](https://github.com/RedC0mrade/foodgram-project-react/actions/workflows/main.yml/badge.svg)
 # Проект Recipe site
 ![Логотип Recipe site](https://fodddgram.hopto.org/favicon.ico)
 
