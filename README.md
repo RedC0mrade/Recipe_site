@@ -1,6 +1,6 @@
 ![Состояние проекта](https://github.com/RedC0mrade/foodgram-project-react/actions/workflows/main.yml/badge.svg)
 # Проект Recipe site
-![Логотип Foodgram](https://fodddgram.hopto.org/favicon.ico)
+![Логотип Recipe site](https://fodddgram.hopto.org/favicon.ico)
 
 Добро пожаловать в репозиторий проекта Recipe site. Этот проект предназначен для обмена рецептами и помощи приготовления блюд.
 Пользуясь данным проектом вы ножете создавать собственные рецепты, добавлять, понравившиеся рецепты, в избанное, подписываться 
