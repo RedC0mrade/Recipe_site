@@ -1,13 +1,12 @@
 ![Состояние проекта](https://github.com/RedC0mrade/foodgram-project-react/actions/workflows/main.yml/badge.svg)
-# Проект Foodgram - Яндекс.Практикум
+# Проект Recipe site
 ![Логотип Foodgram](https://fodddgram.hopto.org/favicon.ico)
 
-Добро пожаловать в репозиторий проекта Foodgram. Этот проект предназначен для обмена рецептами и помощи приготовления блюд.
+Добро пожаловать в репозиторий проекта Recipe site. Этот проект предназначен для обмена рецептами и помощи приготовления блюд.
 Пользуясь данным проектом вы ножете создавать собственные рецепты, добавлять, понравившиеся рецепты, в избанное, подписываться 
 на авторов, добавить рецепт в корзину и скачать список продуктов необходимых для приготовления этих блюд.
 
-## Ссылка на проект - [fodddgram](https://fodddgram.hopto.org)
-## Ссылка Репозиторий - [RedC0mrade](https://github.com/RedC0mrade/foodgram-project-react)
+## Ссылка Репозиторий - [RedC0mrade](https://github.com/RedC0mrade/Recipe_site)
 
 ## Оглавление
 
@@ -22,7 +21,7 @@
 
 ## О проекте
 
-fodddgram - это проект, разработанный в рамках курса на Яндекс.Практикум. Он призван продемонстрировать новые технологии 
+Recipe site - это проект, разработанный в рамках курса на Яндекс.Практикум. Он призван продемонстрировать новые технологии 
 в веб-разработке и предоставить практический опыт создания полноценного веб-приложения.
 
 ## Основные особенности
@@ -37,13 +36,13 @@ fodddgram - это проект, разработанный в рамках ку
 
 ### Локальное развертывание
 
-Чтобы развернуть приложение Kittygram локально, следуйте этим шагам:
+Чтобы развернуть приложение Recipe site локально, следуйте этим шагам:
 
 1. Клонируйте репозиторий на вашем локальном компьютере:
 
    ```bash
-   git clone https://github.com/https://github.com/RedC0mrade/foodgram-project-react
-   cd foodgram-project-react
+   git clone https://github.com/https://github.com/RedC0mrade/Recipe_site
+   cd Recipe site
    py manage.py makemigrations
    py manage.py migrate
    py manage.py runscript my_script -v2
@@ -54,7 +53,7 @@ fodddgram - это проект, разработанный в рамках ку
    cd ../frontend
    npm install
    npm start
-Откройте веб-браузер и перейдите по адресу http://127.0.0.1, чтобы взаимодействовать с локальной версией Kittygram.
+Откройте веб-браузер и перейдите по адресу http://127.0.0.1, чтобы взаимодействовать с локальной версией Recipe site.
 
 
 ### Удаленное развертывание
@@ -63,13 +62,13 @@ fodddgram - это проект, разработанный в рамках ку
 
    Подготовьте окружение на удаленном сервере с необходимым программным обеспечением (Docker, Docker Compose и т.д.).
 3. Выполните команду fork, на своём аккаунте github из этого репозитория 
-## Ссылка Репозиторий - [RedC0mrade](https://github.com/RedC0mrade/foodgram-project-react)
+## Ссылка Репозиторий - [RedC0mrade](https://github.com/RedC0mrade/Recipe_site)
 4. Клонируйте репозиторий на удаленном сервере:
 
    ```bash
 
-   git clone https://github.com/ваше-имя/foodgram-project-react.git
-   cd foodgram-project-react
+   git clone https://github.com/ваше-имя/Recipe_site.git
+   cd Recipe sitet
 5. Выполните скачивание и развертывание продакшн версии:
 ```bash
    docker-compose -f docker-compose.production.yml pull
