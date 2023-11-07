@@ -40,8 +40,8 @@ Recipe site - это проект, разработанный в рамках к
 1. Клонируйте репозиторий на вашем локальном компьютере:
 
    ```bash
-   git clone https://github.com/https://github.com/RedC0mrade/Recipe_site
-   cd Recipe site
+   git clone https://github.com/https://github.com/RedC0mrade/recipe_site
+   cd recipe_site
    py manage.py makemigrations
    py manage.py migrate
    py manage.py runscript my_script -v2
@@ -61,12 +61,12 @@ Recipe site - это проект, разработанный в рамках к
 
    Подготовьте окружение на удаленном сервере с необходимым программным обеспечением (Docker, Docker Compose и т.д.).
 3. Выполните команду fork, на своём аккаунте github из этого репозитория 
-## Ссылка Репозиторий - [RedC0mrade](https://github.com/RedC0mrade/Recipe_site)
+## Ссылка Репозиторий - [RedC0mrade](https://github.com/RedC0mrade/recipe_site)
 4. Клонируйте репозиторий на удаленном сервере:
 
    ```bash
 
-   git clone https://github.com/ваше-имя/Recipe_site.git
+   git clone https://github.com/ваше-имя/recipe_site.git
    cd Recipe sitet
 5. Выполните скачивание и развертывание продакшн версии:
 ```bash
@@ -89,10 +89,10 @@ Recipe site - это проект, разработанный в рамках к
 - DEBUG
 
 ### Описание проекта
-Kittygram - это платформа социальных медиа, где пользователи могут делиться и взаимодействовать с фотографиями кошек. Пользователи могут создавать аккаунты, загружать изображения, отмечать окрас и год рождения котиков.
+Recipe site - это платформа обмена интересными рецептами.
 
 ### Автор
-Проект foodgram был создан [RedC0mrade](https://github.com/redc0mrade).
+Проект Recipe site был создан [RedC0mrade](https://github.com/redc0mrade).
 
 ### Используемые технологии
 Проект использует ряд технологий, включая, но не ограничиваясь:
